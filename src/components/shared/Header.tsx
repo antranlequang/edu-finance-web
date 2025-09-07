@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Menu, X, GraduationCap, ChevronDown, LayoutDashboard, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-neon';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -42,22 +41,22 @@ export default function Header() {
   const closeMenu = () => setIsOpen(false);
 
   const mainLinks = [
-    { href: '/eduscore', label: 'Eduscore' },
-    { href: '/ai-advice', label: 'Tư Vấn AI' },
+    { href: '/eduscore', label: 'EduScore' },
+    { href: '/ai-advice', label: 'AI Tư vấn' },
+    { href: '/finance', label: 'Tài Chính' },
     { href: '/about-us', label: 'Về Chúng Tôi' },
   ];
   
   const discoverLinks = [
-    { href: '/course', label: 'Khóa Học' },
     { href: '/scholarship', label: 'Học Bổng' },
     { href: '/job', label: 'Việc Làm' },
-    { href: '/finance', label: 'Tài Chính' },
+    { href: '/course', label: 'Khóa Học' },
   ];
 
   const renderAuthSection = (isMobile = false) => {
     if (user) {
       return (
-        <div className={cn("flex items-center gap-2", isMobile && "flex-col w-full")}>
+        <div className={cn("flex items-center gap-2 text-base", isMobile && "flex-col w-full")}>
             {user.role === 'admin' && (
               <Button variant="ghost" asChild className={cn(isMobile && "w-full justify-start")}>
                   <Link href="/admin/dashboard" onClick={closeMenu}>Bảng Điều Khiển Admin</Link>
@@ -71,7 +70,7 @@ export default function Header() {
       );
     }
     return (
-      <div className={cn("flex items-center gap-2", isMobile && "flex-col w-full")}>
+      <div className={cn("flex items-center gap-2 text-base", isMobile && "flex-col w-full")}>
         <Button variant="ghost" asChild className={cn(isMobile && "w-full")}>
           <Link href="/login" onClick={closeMenu}>Đăng Nhập</Link>
         </Button>
@@ -94,13 +93,20 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-2" onClick={closeMenu}>
-            <GraduationCap className={cn("h-8 w-8 text-primary")} />
+            <img src="/images/logo.png" alt="HYHAN EDUCATION" className="h-6 hidden sm:inline"/>
             <span className={cn( "text-xl font-bold text-primary")}>HYHAN EDUCATION</span>
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-8">
+          
+          {mainLinks.map((link) => (
+              <Link key={link.href} href={link.href} className={cn("font-medium hover:text-primary transition-colors text-base", textColorClass)}>
+                {link.label}
+              </Link>
+            ))}
+
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn("font-medium hover:text-primary transition-colors flex items-center gap-1 text-sm", textColorClass)}>
+                    <Button variant="ghost" className={cn("font-medium hover:text-primary transition-colors flex items-center gap-1 text-base", textColorClass)}>
                         Khám Phá <ChevronDown className="h-4 w-4"/>
                     </Button>
                 </DropdownMenuTrigger>
@@ -112,12 +118,6 @@ export default function Header() {
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>
-
-            {mainLinks.map((link) => (
-              <Link key={link.href} href={link.href} className={cn("font-medium hover:text-primary transition-colors text-sm", textColorClass)}>
-                {link.label}
-              </Link>
-            ))}
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
@@ -134,15 +134,15 @@ export default function Header() {
       {isOpen && (
         <div className="md:hidden border-t bg-background/95 backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-2">
-            <h3 className="px-2 text-sm font-semibold text-muted-foreground">Khám Phá</h3>
+            <h3 className="px-2 text-lg font-semibold text-muted-foreground">Khám Phá</h3>
             {discoverLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="text-foreground font-medium block p-2 rounded-md hover:bg-secondary transition-colors" onClick={closeMenu}>
+              <Link key={link.href} href={link.href} className="text-foreground font-medium block p-2 rounded-md hover:bg-secondary transition-colors text-lg" onClick={closeMenu}>
                 {link.label}
               </Link>
             ))}
             <div className='my-2 border-t'></div>
             {mainLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="text-foreground font-medium block p-2 rounded-md hover:bg-secondary transition-colors" onClick={closeMenu}>
+              <Link key={link.href} href={link.href} className="text-foreground text-lg font-medium block p-2 rounded-md hover:bg-secondary transition-colors" onClick={closeMenu}>
                 {link.label}
               </Link>
             ))}

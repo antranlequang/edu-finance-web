@@ -21,19 +21,22 @@ const courses = [
 
 export default function CoursePage() {
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen bg-white">
             <Header />
             <main className="flex-grow container mx-auto px-4 py-8">
-                <section className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold text-primary">Explore Our Courses</h1>
-                    <p className="text-xl text-muted-foreground max-w-3xl mx-auto mt-4">
-                        Find the perfect course to advance your skills and career.
-                    </p>
-                </section>
+                {/* Main Content */}
+                <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center text-center overflow-hidden ">
+                    <div className="flex flex-col items-center">
+                        <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6 animate-fade-in">
+                            KHÓA HỌC
+                        </h1>
+                        <p className="text-base md:text-2xl">Khóa học phù hợp cho học sinh, sinh viên</p>
+                    </div>
+                </div>
 
-                <div className="grid md:grid-cols-4 gap-8">
-                    <aside className="md:col-span-1">
-                        <Card>
+                <div className="grid md:grid-cols-4 gap-8 ">
+                    <aside className="md:col-span-1 ">
+                        <Card className="bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 text-white">
                             <CardHeader>
                                 <CardTitle>Filters</CardTitle>
                             </CardHeader>
@@ -56,7 +59,7 @@ export default function CoursePage() {
                                 </div>
                             </CardContent>
                             <CardFooter>
-                                <Button className="w-full">Apply Filters</Button>
+                                <Button className="w-full bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800">Apply Filters</Button>
                             </CardFooter>
                         </Card>
                     </aside>

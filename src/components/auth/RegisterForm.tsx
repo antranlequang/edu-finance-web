@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 import { format } from "date-fns";
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-neon';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -53,16 +53,22 @@ export default function RegisterForm() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      await register(values.email, values.password, values.fullName);
+      await register(
+        values.email, 
+        values.password, 
+        values.fullName, 
+        values.dob,
+        values.gender
+      );
       toast({ 
         title: 'Registration Successful!', 
-        description: 'Please log in with your new account.' 
+        description: 'Your account has been created successfully!' 
       });
       router.push('/login');
     } catch (error: any) {
       console.error(error);
-      // Handle specific Firebase auth errors
-      if (error.code === 'auth/email-already-in-use') {
+      // Handle specific registration errors
+      if (error.message.includes('Email already exists')) {
         form.setError('email', {
           type: 'manual',
           message: 'This email address is already in use.',

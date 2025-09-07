@@ -1,6 +1,6 @@
 import Header from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
-import AdminDashboard from "@/components/admin/AdminDashboard";
+import EnhancedAdminDashboard from "@/components/admin/EnhancedAdminDashboard";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -14,7 +14,7 @@ export default function AdminDashboardPage() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         }>
-          <AdminDashboard />
+          <EnhancedAdminDashboard />
         </Suspense>
       </main>
       <Footer />

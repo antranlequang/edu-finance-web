@@ -15,3 +15,14 @@ export const fileToDataUri = (file: File): Promise<string> => {
     reader.readAsDataURL(file);
   });
 };
+
+export function getAccountLevelName(level: number): string {
+  const levels = {
+    1: 'Basic',
+    2: 'Bronze', 
+    3: 'Silver',
+    4: 'Gold',
+    5: 'Platinum'
+  };
+  return levels[level as keyof typeof levels] || 'Basic';
+}

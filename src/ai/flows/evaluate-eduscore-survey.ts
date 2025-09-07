@@ -15,6 +15,35 @@ const EvaluateEduscoreSurveyInputSchema = z.object({
   academicInfoGPA: z
     .number()
     .describe('Grade Point Average on a 4.0 scale.'),
+  major: z
+    .string()
+    .describe('Academic major or field of study.'),
+  majorSpecialization: z
+    .string()
+    .optional()
+    .describe('Specific specialization within the major.'),
+  technicalSkills: z
+    .string()
+    .describe('Technical skills and competencies.'),
+  programmingLanguages: z
+    .string()
+    .optional()
+    .describe('Programming languages if applicable.'),
+  certifications: z
+    .string()
+    .describe('Professional certifications and licenses.'),
+  languageSkills: z
+    .string()
+    .describe('Language proficiencies.'),
+  workExperience: z
+    .string()
+    .describe('Work experience and internships.'),
+  currentYear: z
+    .string()
+    .describe('Current academic year or level.'),
+  university: z
+    .string()
+    .describe('Name of university or institution.'),
   academicInfoTranscriptDataUri: z
     .string()
     .describe(
@@ -40,6 +69,9 @@ const EvaluateEduscoreSurveyInputSchema = z.object({
   aspirations: z
     .string()
     .describe('A short essay about the student, their dreams and reasons for seeking support.'),
+  careerGoals: z
+    .string()
+    .describe('Career goals and future plans.'),
   recommendationLetterDataUri: z
     .string()
     .describe(
@@ -77,15 +109,27 @@ const prompt = ai.definePrompt({
   Evaluate the following Eduscore survey responses based on a proprietary rubric, and provide an Eduscore (out of 100) representing the overall qualifications of the student.
 
   Consider the following factors:
-  - Academic performance (GPA, transcript)
+  - Academic performance (GPA, transcript, major, university)
+  - Technical skills and professional competencies
+  - Work experience and practical skills
+  - Language skills and certifications
   - Extracurricular activities and awards
   - Family income and assets
   - Special circumstances
-  - Aspirations and recommendations
+  - Career aspirations and recommendations
 
   Explain the reasoning behind the Eduscore assigned. Be brief and specific.
 
   Academic Info GPA: {{{academicInfoGPA}}}
+  Major: {{{major}}}
+  Major Specialization: {{{majorSpecialization}}}
+  Current Year: {{{currentYear}}}
+  University: {{{university}}}
+  Technical Skills: {{{technicalSkills}}}
+  Programming Languages: {{{programmingLanguages}}}
+  Certifications: {{{certifications}}}
+  Language Skills: {{{languageSkills}}}
+  Work Experience: {{{workExperience}}}
   Academic Info Transcript: {{media url=academicInfoTranscriptDataUri}}
   Extracurricular Activities: {{{extracurricularActivities}}}
   Awards: {{{awards}}}
@@ -95,6 +139,7 @@ const prompt = ai.definePrompt({
   Medical Expenses: {{{medicalExpenses}}}
   Special Circumstances: {{{specialCircumstances}}}
   Aspirations: {{{aspirations}}}
+  Career Goals: {{{careerGoals}}}
   Recommendation Letter: {{media url=recommendationLetterDataUri}}`,
 });
 

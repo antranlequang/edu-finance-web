@@ -1,6 +1,6 @@
 import Header from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
-import ProfileDashboard from "@/components/profile/ProfileDashboard";
+import EnhancedProfileDashboard from "@/components/profile/EnhancedProfileDashboard";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -14,7 +14,7 @@ export default function ProfilePage() {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         }>
-          <ProfileDashboard />
+          <EnhancedProfileDashboard />
         </Suspense>
       </main>
       <Footer />

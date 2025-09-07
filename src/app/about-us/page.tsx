@@ -5,29 +5,20 @@ import Image from "next/image";
 
 export default function AboutUsPage() {
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-white">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <section className="text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">About Hyhan</h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            We are dedicated to creating a fair, transparent, and connected world by empowering individuals through education and technology.
-          </p>
-        </section>
+        {/* Main Content */}
+        <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center text-center overflow-hidden ">
+            <div className="flex flex-col items-center">
+                <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6">
+                    VỀ HYHAN
+                </h1>
+                <p className="text-base md:text-2xl">Chúng tôi cam kết tạo ra một thế giới công bằng, minh bạch và kết nối bằng cách trao quyền cho mọi người thông qua giáo dục và công nghệ.</p>
+            </div>
+        </div>
 
-        <section className="py-16">
-           <div className="relative w-full h-80 rounded-lg overflow-hidden shadow-lg">
-             <Image
-                src="https://picsum.photos/1200/400"
-                alt="Our Team"
-                data-ai-hint="diverse team working"
-                fill
-                style={{ objectFit: 'cover' }}
-             />
-             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <h2 className="text-4xl font-bold text-white">Our Mission & Vision</h2>
-             </div>
-           </div>
+        <section className="py-16 ">
            <div className="grid md:grid-cols-2 gap-12 mt-12">
               <div>
                   <h3 className="text-2xl font-semibold mb-4">Our Mission</h3>

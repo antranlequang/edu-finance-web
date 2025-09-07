@@ -3,17 +3,21 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-neon';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, User, Award, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, User, Award, ArrowRight, LayoutDashboard, Shield, FileCheck } from 'lucide-react';
 import Link from 'next/link';
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer } from 'recharts';
+import { getAccountLevelName } from '@/lib/utils';
+import type { EduscoreData, VerificationDocument } from '@/lib/database-operations';
 
 export default function ProfileDashboard() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
-  const [eduscoreResult, setEduscoreResult] = useState<{ eduscore: number; reasoning: string } | null>(null);
+  const [eduscoreResult, setEduscoreResult] = useState<EduscoreData | null>(null);
+  const [verificationDocs, setVerificationDocs] = useState<VerificationDocument[]>([]);
   const [isScoreLoading, setIsScoreLoading] = useState(true);
 
   useEffect(() => {
@@ -23,18 +27,38 @@ export default function ProfileDashboard() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    if (user) {
-        const storedResult = localStorage.getItem('eduscoreResult');
-        if (storedResult) {
-          try {
-            setEduscoreResult(JSON.parse(storedResult));
-          } catch (e) {
-            console.error("Failed to parse eduscoreResult from localStorage", e);
-            localStorage.removeItem('eduscoreResult');
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          // Load Eduscore from API
+          const eduscoreResponse = await fetch('/api/user/eduscore');
+          if (eduscoreResponse.ok) {
+            const { eduscore } = await eduscoreResponse.json();
+            if (eduscore) {
+              setEduscoreResult(eduscore);
+            } else {
+              // Fallback to localStorage for backwards compatibility
+              const storedResult = localStorage.getItem('eduscoreResult');
+              if (storedResult) {
+                setEduscoreResult(JSON.parse(storedResult));
+              }
+            }
           }
+          
+          // Load verification documents from API
+          const docsResponse = await fetch('/api/user/documents');
+          if (docsResponse.ok) {
+            const { documents } = await docsResponse.json();
+            setVerificationDocs(documents);
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
         }
-    }
-    setIsScoreLoading(false);
+      }
+      setIsScoreLoading(false);
+    };
+    
+    loadUserData();
   }, [user]);
 
   if (loading || !user || isScoreLoading) {
@@ -45,7 +69,16 @@ export default function ProfileDashboard() {
     );
   }
 
-  const chartData = eduscoreResult ? [{ name: 'Eduscore', value: eduscoreResult.eduscore, fill: 'hsl(var(--primary))' }] : [];
+  const chartData = eduscoreResult ? [{ name: 'Eduscore', value: eduscoreResult.score, fill: 'hsl(var(--primary))' }] : [];
+  
+  const getVerificationStatusColor = (status: string) => {
+    switch (status) {
+      case 'verified': return 'bg-green-500';
+      case 'pending': return 'bg-yellow-500';
+      case 'rejected': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
 
   return (
     <div>
@@ -92,7 +125,7 @@ export default function ProfileDashboard() {
                           <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
                           <RadialBar background dataKey='value' cornerRadius={10} />
                           <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-4xl font-bold fill-foreground">
-                            {eduscoreResult.eduscore}
+                            {eduscoreResult.score}
                           </text>
                           <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" className="text-md fill-muted-foreground">
                             / 100
@@ -125,26 +158,71 @@ export default function ProfileDashboard() {
             </Card>
         </div>
         
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2"><User /> Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-sm">
-                <p className="font-semibold">Name</p> 
-                <p className="text-muted-foreground">{user.name || 'Not set'}</p>
-            </div>
-            <div className="text-sm">
-                <p className="font-semibold">Email</p> 
-                <p className="text-muted-foreground">{user.email}</p>
-            </div>
-            <div className="text-sm">
-                <p className="font-semibold">Role</p> 
-                <p className="text-muted-foreground capitalize">{user.role}</p>
-            </div>
-            <Button variant="outline" className="w-full mt-4 !mb-0">Edit Profile</Button>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><User /> Profile Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="text-sm">
+                  <p className="font-semibold">Name</p> 
+                  <p className="text-muted-foreground">{user.name || 'Not set'}</p>
+              </div>
+              <div className="text-sm">
+                  <p className="font-semibold">Email</p> 
+                  <p className="text-muted-foreground">{user.email}</p>
+              </div>
+              <div className="text-sm">
+                  <p className="font-semibold">Role</p> 
+                  <p className="text-muted-foreground capitalize">{user.role}</p>
+              </div>
+              <div className="text-sm">
+                  <p className="font-semibold">Account Level</p> 
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{getAccountLevelName(user.accountLevel)}</Badge>
+                    <span className="text-muted-foreground text-xs">Level {user.accountLevel}</span>
+                  </div>
+              </div>
+              <div className="text-sm">
+                  <p className="font-semibold flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Verification Status
+                  </p> 
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${getVerificationStatusColor(user.verificationStatus)}`} />
+                    <p className="text-muted-foreground capitalize">{user.verificationStatus}</p>
+                  </div>
+              </div>
+              {verificationDocs.length > 0 && (
+                <div className="text-sm">
+                  <p className="font-semibold flex items-center gap-2">
+                    <FileCheck className="h-4 w-4" />
+                    Documents ({verificationDocs.length})
+                  </p>
+                  <div className="space-y-1 mt-1">
+                    {verificationDocs.slice(0, 3).map(doc => (
+                      <div key={doc.id} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">{doc.name}</span>
+                        <Badge 
+                          variant={doc.status === 'verified' ? 'default' : doc.status === 'pending' ? 'secondary' : 'destructive'}
+                          className="text-xs"
+                        >
+                          {doc.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col gap-2 mt-4">
+                <Button variant="outline" className="w-full">Edit Profile</Button>
+                <Button variant="outline" asChild className="w-full">
+                  <Link href="/verification">Document Verification</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

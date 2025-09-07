@@ -3,25 +3,23 @@
 
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { useRouter } from 'next/navigation';
+import { 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  User as FirebaseUser
+} from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { createUserProfile, getUserProfile, UserProfile } from '@/lib/database';
 
-type User = {
-  id: string;
-  email: string;
-  role: 'student' | 'admin';
-  name?: string;
-};
-
-// This is a mock user database. In a real app, this would be a backend service.
-const MOCK_USERS: { [key: string]: User } = {
-  'user@test.com': { id: '1', email: 'user@test.com', role: 'student', name: 'Test User' },
-  'admin@hyhan.vn': { id: '2', email: 'admin@hyhan.vn', role: 'admin', name: 'Admin User' },
-};
+type User = UserProfile;
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, pass: string) => Promise<User>;
-  register: (email: string, pass: string, name: string) => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (email: string, password: string, name: string, dateOfBirth?: Date, gender?: string) => Promise<User>;
   logout: () => void;
 }
 
@@ -33,64 +31,72 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    // Check localStorage for a logged-in user
-    try {
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        try {
+          const userProfile = await getUserProfile(firebaseUser.email!);
+          setUser(userProfile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem('user');
-    } finally {
       setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string): Promise<User> => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userProfile = await getUserProfile(userCredential.user.email!);
+      if (!userProfile) {
+        throw new Error('User profile not found');
+      }
+      setUser(userProfile);
+      return userProfile;
+    } catch (error: any) {
+      console.error('Login error:', error);
+      throw error;
     }
   }, []);
 
-  const login = useCallback(async (email: string, pass: string): Promise<User> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Mock API call
-        const foundUser = Object.values(MOCK_USERS).find(u => u.email === email);
-        // NOTE: In a real app, you'd check the password hash. Here we ignore it.
-        if (foundUser) {
-          localStorage.setItem('user', JSON.stringify(foundUser));
-          setUser(foundUser);
-          resolve(foundUser);
-        } else {
-          reject(new Error('Invalid credentials'));
-        }
-      }, 500);
-    });
+  const register = useCallback(async (
+    email: string, 
+    password: string, 
+    name: string, 
+    dateOfBirth?: Date, 
+    gender?: string
+  ): Promise<User> => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      const userProfile = await createUserProfile({
+        email,
+        name,
+        role: email === 'admin@hyhan.vn' ? 'admin' : 'student',
+        dateOfBirth,
+        gender: gender as 'male' | 'female' | 'other' | undefined
+      });
+      
+      return userProfile;
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   }, []);
 
-  const register = useCallback(async (email: string, pass: string, name: string): Promise<User> => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Mock API call
-        if (MOCK_USERS[email]) {
-          reject(new Error('User already exists'));
-        } else {
-          const newUser: User = {
-            id: String(Object.keys(MOCK_USERS).length + 1),
-            email,
-            name,
-            role: email === 'admin@hyhan.vn' ? 'admin' : 'student',
-          };
-          MOCK_USERS[email] = newUser;
-          // Don't log in automatically after registration.
-          // localStorage.setItem('user', JSON.stringify(newUser));
-          // setUser(newUser);
-          resolve(newUser);
-        }
-      }, 500);
-    });
-  }, []);
-
-  const logout = useCallback(() => {
-    localStorage.removeItem('user');
-    setUser(null);
-    router.push('/');
+  const logout = useCallback(async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   }, [router]);
   
   const value = { user, loading, login, register, logout };

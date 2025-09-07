@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth-neon';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
@@ -78,8 +78,8 @@ export default function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Chào Mừng Trở Lại</CardTitle>
-        <CardDescription>Nhập thông tin đăng nhập để truy cập tài khoản của bạn.</CardDescription>
+        <CardTitle className="text-center mb-2">TRANG ĐĂNG NHẬP</CardTitle>
+        <CardDescription className="text-center">Nhập thông tin đăng nhập để truy cập tài khoản của bạn.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -89,9 +89,9 @@ export default function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email:</FormLabel>
                   <FormControl>
-                    <Input placeholder="ban@example.com" {...field} />
+                    <Input placeholder="nguyenvana@gmail.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -102,7 +102,7 @@ export default function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Mật Khẩu</FormLabel>
+                  <FormLabel>Mật Khẩu:</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
@@ -114,6 +114,11 @@ export default function LoginForm() {
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Đăng Nhập
             </Button>
+            <div className="mt-4 text-center">
+              <Link href="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+                Quên mật khẩu?
+              </Link>
+            </div>
           </form>
         </Form>
       </CardContent>

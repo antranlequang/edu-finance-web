@@ -10,10 +10,10 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <GraduationCap className="h-8 w-8 text-primary" />
-              <span className="text-2xl font-bold text-primary">EduGuideAI</span>
+              <span className="text-2xl font-bold text-primary">HYHAN EDUCATION</span>
             </Link>
-            <p className="text-muted-foreground text-sm">
-              Tạo sức mạnh cho tương lai thông qua hướng dẫn được thúc đẩy bởi AI một cách công bằng, minh bạch và cá nhân hóa cho giáo dục và nghề nghiệp.
+            <p className="text-muted-foreground text-base text-justify italic">
+              "Đồng hành hôm nay, tiếp bước ngày mai" 
             </p>
           </div>
 
@@ -51,7 +51,7 @@ export default function Footer() {
 
         <div className="border-t mt-8 pt-6 flex flex-col sm:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm text-center sm:text-left mb-4 sm:mb-0">
-                © {new Date().getFullYear()} EduGuideAI. Tất cả quyền được bảo lưu.
+                © {new Date().getFullYear()} Hyhan Education. All rights reserved.
             </p>
             <div className="flex gap-4">
                 <Link href="#" className="text-muted-foreground hover:text-primary"><Facebook size={20} /></Link>

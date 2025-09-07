@@ -121,6 +121,10 @@ const getJobs = ai.defineTool(
 
 const advisorPrompt = ai.definePrompt({
     name: 'advisorPrompt',
+    inputSchema: z.object({
+        history: z.array(MessageSchema),
+        message: z.string(),
+    }),
     system: `You are a helpful and friendly AI advisor for the Hyhan platform. Your goal is to provide personalized guidance to students on scholarships, courses, and job opportunities.
 
 - Be conversational and encouraging.
@@ -128,7 +132,14 @@ const advisorPrompt = ai.definePrompt({
 - If a user asks a general question, you can use the tools without specific filters to show them what's available. For example, if they ask "what jobs are there?", call getJobs with no parameters.
 - When presenting information, format it clearly. Use markdown lists.
 - If the user provides their Eduscore, use it to find matching scholarships.
-- Keep your responses concise and to the point.`,
+- Keep your responses concise and to the point.`
+
+
+,
+    messages: (input) => [
+        ...input.history,
+        { role: 'user', content: input.message }
+    ],
     tools: [getScholarships, getCourses, getJobs],
 });
 
@@ -155,9 +166,12 @@ export async function chat(input: z.infer<typeof ChatInputSchema>): Promise<stri
     }
 
     const result = await ai.generate({
-        prompt: input.prompt,
-        history: history,
-        model: advisorPrompt,
+        prompt: advisorPrompt,
+        input: {
+            history: history,
+            message: input.prompt
+        },
+        model: 'googleai/gemini-2.5-flash',
     });
 
     return result.text;

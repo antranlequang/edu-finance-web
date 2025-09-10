@@ -4,11 +4,10 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { evaluateEduscoreSurvey, EvaluateEduscoreSurveyOutput } from '@/ai/flows/evaluate-eduscore-survey';
-import { fileToDataUri } from '@/lib/utils';
+import { EvaluateEduscoreSurveyOutput } from '@/ai/flows/evaluate-eduscore-survey';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth-neon';
-import { saveEduscoreResult, uploadVerificationDocument } from '@/lib/database';
+import { saveEduscoreResult } from '@/lib/database';
 
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,48 +20,37 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
 import SurveyResult from './SurveyResult';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_FILE_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
-
 const formSchema = z.object({
-  academicInfoGPA: z.coerce.number().min(0, "GPA must be at least 0.").max(4, "GPA cannot exceed 4.0."),
-  major: z.string({ required_error: "Please select your major/field of study." }),
-  majorSpecialization: z.string().optional(),
-  technicalSkills: z.string().min(1, "Please list your technical skills."),
+  academicInfoGPA: z.coerce.number().min(0, "Điểm trung bình (GPA) phải từ 0 trở lên.").max(4, "Điểm trung bình (GPA) không được vượt quá 4.0."),
+  major: z.string({ required_error: "Vui lòng chọn chuyên ngành/lĩnh vực học tập của bạn." }),
+  majorOther: z.string().optional(),
+  technicalSkills: z.string().min(1, "Vui lòng liệt kê các kỹ năng chuyên môn của bạn."),
   programmingLanguages: z.string().optional(),
-  certifications: z.string().min(1, "Please list your certifications, or type 'None'."),
-  currentYear: z.string({ required_error: "Please select your current academic year." }),
-  university: z.string().min(1, "Please enter your university/institution name."),
-  academicInfoTranscript: z.any()
-    .refine((files) => files?.length == 1, "Transcript is required.")
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-    .refine((files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type), "Only .pdf, .jpg, .jpeg, and .png files are accepted."),
-  extracurricularActivities: z.string().min(1, "Please list your activities."),
-  awards: z.string().min(1, "Please list any awards, or type 'None'."),
-  languageSkills: z.string().min(1, "Please describe your language skills."),
-  workExperience: z.string().min(1, "Please describe your work experience, or type 'None'."),
-  familyIncome: z.string({ required_error: "Please select an income range." }),
-  dependents: z.coerce.number().min(0, "Number of dependents cannot be negative."),
-  valuableAssets: z.string().min(1, "Please describe valuable assets, or type 'None'."),
-  medicalExpenses: z.string().min(1, "Please describe medical expenses, or type 'None'."),
-  specialCircumstances: z.string().min(1, "Please describe special circumstances, or type 'None'."),
-  aspirations: z.string().min(50, "Please write at least 50 characters.").max(1500),
-  careerGoals: z.string().min(50, "Please describe your career goals.").max(1000),
-  recommendationLetter: z.any()
-    .refine((files) => files?.length == 1, "Recommendation letter is required.")
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
-    .refine((files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type), "Only .pdf, .jpg, .jpeg, and .png files are accepted."),
+  certifications: z.string().optional(),
+  currentYear: z.string({ required_error: "Vui lòng chọn năm học hiện tại của bạn." }),
+  university: z.string().min(1, "Vui lòng nhập tên trường đại học/học viện của bạn."),
+  extracurricularActivities: z.string().optional(),
+  awards: z.string().optional(),
+  languageSkills: z.string().optional(),
+  workExperience: z.string().optional(),
+  familyIncome: z.string({ required_error: "Vui lòng chọn phạm vi thu nhập." }),
+  dependents: z.coerce.number().min(0, "Số lượng người phụ thuộc không được âm."),
+  valuableAssets: z.string().optional(),
+  medicalExpenses: z.string().optional(),
+  specialCircumstances: z.string().optional(),
+  aspirations: z.string().optional(),
+  careerGoals: z.string().optional(),
 });
 
 type SurveyFormValues = z.infer<typeof formSchema>;
 
 const steps = [
-  { id: 1, title: 'Academic Information', fields: ['academicInfoGPA', 'major', 'majorSpecialization', 'currentYear', 'university', 'academicInfoTranscript'] },
-  { id: 2, title: 'Skills & Experience', fields: ['technicalSkills', 'programmingLanguages', 'certifications', 'languageSkills', 'workExperience'] },
-  { id: 3, title: 'Extracurriculars & Awards', fields: ['extracurricularActivities', 'awards'] },
-  { id: 4, title: 'Financial Information', fields: ['familyIncome', 'dependents', 'valuableAssets'] },
-  { id: 5, title: 'Special Circumstances', fields: ['medicalExpenses', 'specialCircumstances'] },
-  { id: 6, title: 'Aspirations & Recommendations', fields: ['aspirations', 'careerGoals', 'recommendationLetter'] },
+  { id: 1, title: 'Thông tin cơ bản', fields: ['academicInfoGPA', 'major', 'majorOther', 'currentYear', 'university'] },
+  { id: 2, title: 'Kỹ năng & Kinh nghiệm', fields: ['technicalSkills', 'programmingLanguages', 'certifications', 'languageSkills', 'workExperience'] },
+  { id: 3, title: 'Hoạt động ngoại khóa & Giải thưởng', fields: ['extracurricularActivities', 'awards'] },
+  { id: 4, title: 'Thông tin tài chính', fields: ['familyIncome', 'dependents', 'valuableAssets'] },
+  { id: 5, title: 'Hoàn cảnh đặc biệt', fields: ['medicalExpenses', 'specialCircumstances'] },
+  { id: 6, title: 'Nguyện vọng', fields: ['aspirations', 'careerGoals'] },
 ];
 
 export default function SurveyWizard() {
@@ -72,16 +60,37 @@ export default function SurveyWizard() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+
   const form = useForm<SurveyFormValues>({
     resolver: zodResolver(formSchema),
     mode: 'onChange',
+    defaultValues: {
+      academicInfoGPA: 0,
+      major: '',
+      majorOther: '',
+      technicalSkills: '',
+      programmingLanguages: '',
+      certifications: '',
+      currentYear: '',
+      university: '',
+      extracurricularActivities: '',
+      awards: '',
+      languageSkills: '',
+      workExperience: '',
+      familyIncome: '',
+      dependents: 0,
+      valuableAssets: '',
+      medicalExpenses: '',
+      specialCircumstances: '',
+      aspirations: '',
+      careerGoals: '',
+    }
   });
-  
-  const transcriptFileRef = form.register("academicInfoTranscript");
-  const letterFileRef = form.register("recommendationLetter");
 
   const handleNext = async () => {
     const fields = steps[currentStep].fields as (keyof SurveyFormValues)[];
+    
+    // Validate all fields
     const output = await form.trigger(fields, { shouldFocus: true });
     if (!output) return;
 
@@ -96,6 +105,97 @@ export default function SurveyWizard() {
     }
   };
 
+  // Fast local evaluation function - instant scoring
+  const evaluateEduscoreFast = (surveyData: SurveyFormValues): EvaluateEduscoreSurveyOutput => {
+    let score = 0;
+    let reasoning = "Phân tích EduScore của bạn:\n\n";
+    
+    // Academic Performance (40 points max)
+    const gpaScore = (surveyData.academicInfoGPA / 4.0) * 40;
+    score += gpaScore;
+    reasoning += `📚 **Thành tích học tập (${gpaScore.toFixed(1)}/40 điểm):**\n`;
+    reasoning += `- GPA ${surveyData.academicInfoGPA}/4.0 `;
+    if (surveyData.academicInfoGPA >= 3.5) {
+      reasoning += "- Xuất sắc!\n";
+    } else if (surveyData.academicInfoGPA >= 3.0) {
+      reasoning += "- Khá tốt\n";
+    } else {
+      reasoning += "- Cần cải thiện\n";
+    }
+    reasoning += `- Chuyên ngành: ${surveyData.major}\n`;
+    reasoning += `- Trường: ${surveyData.university}\n\n`;
+    
+    // Skills & Experience (25 points max)
+    let skillsScore = 0;
+    if (surveyData.technicalSkills.length > 20) skillsScore += 8;
+    else if (surveyData.technicalSkills.length > 10) skillsScore += 5;
+    else skillsScore += 2;
+    
+    if (surveyData.programmingLanguages && surveyData.programmingLanguages.length > 0) skillsScore += 5;
+    if (surveyData.certifications && surveyData.certifications.length > 0) skillsScore += 5;
+    if (surveyData.languageSkills && surveyData.languageSkills.length > 0) skillsScore += 4;
+    if (surveyData.workExperience && surveyData.workExperience.length > 0) skillsScore += 3;
+    
+    skillsScore = Math.min(skillsScore, 25);
+    score += skillsScore;
+    reasoning += `🔧 **Kỹ năng & Kinh nghiệm (${skillsScore}/25 điểm):**\n`;
+    reasoning += `- Kỹ năng chuyên môn: ${surveyData.technicalSkills.substring(0, 50)}...\n`;
+    if (surveyData.programmingLanguages) reasoning += `- Ngôn ngữ lập trình: ${surveyData.programmingLanguages}\n`;
+    if (surveyData.workExperience) reasoning += `- Kinh nghiệm làm việc có\n`;
+    reasoning += "\n";
+    
+    // Extracurricular & Awards (20 points max)
+    let extraScore = 0;
+    if (surveyData.extracurricularActivities && surveyData.extracurricularActivities.length > 0) extraScore += 10;
+    if (surveyData.awards && surveyData.awards.length > 0) extraScore += 10;
+    
+    score += extraScore;
+    reasoning += `🌟 **Hoạt động & Thành tích (${extraScore}/20 điểm):**\n`;
+    if (surveyData.extracurricularActivities) reasoning += `- Hoạt động ngoại khóa: Có\n`;
+    if (surveyData.awards) reasoning += `- Giải thưởng: Có\n`;
+    if (extraScore === 0) reasoning += "- Chưa có hoạt động ngoại khóa đáng kể\n";
+    reasoning += "\n";
+    
+    // Financial Need & Aspirations (15 points max)
+    let needScore = 0;
+    if (surveyData.familyIncome.includes('5-10') || surveyData.familyIncome.includes('10-15')) needScore += 8;
+    else if (surveyData.familyIncome.includes('15-25')) needScore += 5;
+    else needScore += 3;
+    
+    if (surveyData.dependents >= 2) needScore += 3;
+    if (surveyData.aspirations && surveyData.aspirations.length > 50) needScore += 2;
+    if (surveyData.careerGoals && surveyData.careerGoals.length > 30) needScore += 2;
+    
+    score += needScore;
+    reasoning += `💰 **Nhu cầu tài chính & Nguyện vọng (${needScore}/15 điểm):**\n`;
+    reasoning += `- Thu nhập gia đình: ${surveyData.familyIncome}\n`;
+    reasoning += `- Số người phụ thuộc: ${surveyData.dependents}\n`;
+    if (surveyData.aspirations) reasoning += "- Có nguyện vọng rõ ràng\n";
+    reasoning += "\n";
+    
+    // Final score adjustment
+    score = Math.min(Math.max(score, 30), 100);
+    
+    reasoning += `📊 **Tổng kết:**\n`;
+    reasoning += `- **EduScore: ${Math.round(score)}/100**\n`;
+    if (score >= 85) {
+      reasoning += "- Hồ sơ xuất sắc! Bạn có cơ hội cao với các học bổng danh giá.\n";
+    } else if (score >= 75) {
+      reasoning += "- Hồ sơ tốt! Bạn đủ điều kiện cho nhiều học bổng.\n";
+    } else if (score >= 65) {
+      reasoning += "- Hồ sơ khá ổn. Nên cải thiện thêm để tăng cơ hội.\n";
+    } else {
+      reasoning += "- Hồ sơ cần cải thiện đáng kể để tăng cơ hội học bổng.\n";
+    }
+    
+    reasoning += "\n✨ **Lời khuyên:** Tiếp tục phát triển kỹ năng, tham gia hoạt động ngoại khóa và duy trì thành tích học tập tốt!";
+    
+    return {
+      eduscore: Math.round(score),
+      reasoning: reasoning
+    };
+  };
+
   const onSubmit = async (data: SurveyFormValues) => {
     if (!user) {
       toast({ variant: 'destructive', title: "Error", description: "You must be logged in to submit the survey." });
@@ -104,45 +204,10 @@ export default function SurveyWizard() {
     
     setIsLoading(true);
     try {
-      // Upload verification documents
-      const transcriptUrl = await uploadVerificationDocument(
-        user.email, 
-        data.academicInfoTranscript[0], 
-        'transcript'
-      );
+      let surveyResult;
       
-      const recommendationUrl = await uploadVerificationDocument(
-        user.email, 
-        data.recommendationLetter[0], 
-        'recommendation'
-      );
-      
-      const transcriptDataUri = await fileToDataUri(data.academicInfoTranscript[0]);
-      const recommendationLetterDataUri = await fileToDataUri(data.recommendationLetter[0]);
-
-      const surveyResult = await evaluateEduscoreSurvey({
-        academicInfoGPA: data.academicInfoGPA,
-        major: data.major,
-        majorSpecialization: data.majorSpecialization,
-        technicalSkills: data.technicalSkills,
-        programmingLanguages: data.programmingLanguages,
-        certifications: data.certifications,
-        languageSkills: data.languageSkills,
-        workExperience: data.workExperience,
-        currentYear: data.currentYear,
-        university: data.university,
-        academicInfoTranscriptDataUri: transcriptDataUri,
-        extracurricularActivities: data.extracurricularActivities,
-        awards: data.awards,
-        familyIncome: data.familyIncome,
-        dependents: data.dependents,
-        valuableAssets: data.valuableAssets,
-        medicalExpenses: data.medicalExpenses,
-        specialCircumstances: data.specialCircumstances,
-        aspirations: data.aspirations,
-        careerGoals: data.careerGoals,
-        recommendationLetterDataUri: recommendationLetterDataUri,
-      });
+      // Use fast local evaluation for instant results
+      surveyResult = evaluateEduscoreFast(data);
       
       // Save to database
       await saveEduscoreResult(user.email, {
@@ -150,20 +215,20 @@ export default function SurveyWizard() {
         score: surveyResult.eduscore,
         reasoning: surveyResult.reasoning,
         surveyData: {
-          academicInfoGPA: data.academicInfoGPA,
-          major: data.major,
-          majorSpecialization: data.majorSpecialization,
-          technicalSkills: data.technicalSkills,
+          academicInfoGPA: data.academicInfoGPA || 0,
+          major: data.major || '',
+          majorSpecialization: data.majorOther,
+          technicalSkills: data.technicalSkills || '',
           programmingLanguages: data.programmingLanguages,
           certifications: data.certifications,
           languageSkills: data.languageSkills,
           workExperience: data.workExperience,
-          currentYear: data.currentYear,
-          university: data.university,
+          currentYear: data.currentYear || '',
+          university: data.university || '',
           extracurricularActivities: data.extracurricularActivities,
           awards: data.awards,
-          familyIncome: data.familyIncome,
-          dependents: data.dependents,
+          familyIncome: data.familyIncome || '',
+          dependents: data.dependents || 0,
           valuableAssets: data.valuableAssets,
           medicalExpenses: data.medicalExpenses,
           specialCircumstances: data.specialCircumstances,
@@ -171,8 +236,8 @@ export default function SurveyWizard() {
           careerGoals: data.careerGoals,
         },
         documentUrls: {
-          transcript: transcriptUrl,
-          recommendationLetter: recommendationUrl
+          transcript: null,
+          recommendationLetter: null
         }
       });
       
@@ -207,12 +272,14 @@ export default function SurveyWizard() {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <div className="mb-4">
-            <p className="text-sm text-muted-foreground">Step {currentStep + 1} of {steps.length}</p>
+        <div className="mb-4 flex justify-between items-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Trang {currentStep + 1} / {steps.length}</p>
             <Progress value={((currentStep + 1) / steps.length) * 100} className="mt-2" />
+          </div>
         </div>
         <CardTitle className="text-2xl">{steps[currentStep].title}</CardTitle>
-        <CardDescription>Please provide the following information.</CardDescription>
+        <CardDescription>Hãy cung cấp chính xác các thông tin dưới đây</CardDescription>
       </CardHeader>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -221,18 +288,18 @@ export default function SurveyWizard() {
               <>
                 <FormField control={form.control} name="academicInfoGPA" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>GPA (4.0 Scale)</FormLabel>
-                    <FormControl><Input type="number" step="0.01" placeholder="e.g., 3.8" {...field} /></FormControl>
+                    <FormLabel>GPA (Thang điểm 4)</FormLabel>
+                    <FormControl><Input type="number" step="0.01" placeholder="vd: 3.8" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="major" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Major/Field of Study</FormLabel>
+                    <FormLabel>Chuyên ngành/Lĩnh vực học tập của bạn?</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select your major" />
+                          <SelectValue placeholder="Nhập ngành bạn đang học" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -285,32 +352,37 @@ export default function SurveyWizard() {
                         <SelectItem value="Other">Khác (Other)</SelectItem>
                       </SelectContent>
                     </Select>
+                    
+                    {field.value === "Other" && (
+                      <FormField control={form.control} name="majorOther" render={({ field: otherField }) => (
+                        <FormItem className="mt-2">
+                          <FormLabel>Hãy nhập chuyên ngành của bạn</FormLabel>
+                          <FormControl><Input placeholder="Nhập chuyên ngành của bạn" {...otherField} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                    )}
+
                     <FormMessage />
                   </FormItem>
                 )} />
-                <FormField control={form.control} name="majorSpecialization" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Major Specialization (Optional)</FormLabel>
-                    <FormControl><Input placeholder="e.g., AI & Machine Learning, Web Development, Financial Analysis..." {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
+
                 <FormField control={form.control} name="currentYear" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Academic Year</FormLabel>
+                    <FormLabel>Bạn là sinh viên năm mấy?</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select your year" />
+                          <SelectValue placeholder="Chọn năm hiện tại" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="1st Year">1st Year</SelectItem>
-                        <SelectItem value="2nd Year">2nd Year</SelectItem>
-                        <SelectItem value="3rd Year">3rd Year</SelectItem>
-                        <SelectItem value="4th Year">4th Year</SelectItem>
-                        <SelectItem value="Graduate">Graduate Student</SelectItem>
-                        <SelectItem value="Recent Graduate">Recent Graduate</SelectItem>
+                        <SelectItem value="1st Year">Năm nhất</SelectItem>
+                        <SelectItem value="2nd Year">Năm hai</SelectItem>
+                        <SelectItem value="3rd Year">Năm ba</SelectItem>
+                        <SelectItem value="4th Year">Năm tư</SelectItem>
+                        <SelectItem value="Graduate">Đã tốt nghiệp</SelectItem>
+                        <SelectItem value="Recent Graduate">Vừa tốt nghiệp</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -318,16 +390,8 @@ export default function SurveyWizard() {
                 )} />
                 <FormField control={form.control} name="university" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>University/Institution</FormLabel>
-                    <FormControl><Input placeholder="e.g., Đại học Quốc gia Hà Nội" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="academicInfoTranscript" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Upload Transcript</FormLabel>
-                    <FormControl><Input type="file" {...transcriptFileRef} /></FormControl>
-                    <FormDescription>PDF, JPG, or PNG file. Max 5MB.</FormDescription>
+                    <FormLabel>Trường đại học/Cao đẳng</FormLabel>
+                    <FormControl><Input placeholder="vd: Đại học Kinh tế - Luật" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -337,36 +401,36 @@ export default function SurveyWizard() {
               <>
                 <FormField control={form.control} name="technicalSkills" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Technical Skills</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., Python, React, Photoshop, Microsoft Office, AutoCAD..." {...field} /></FormControl>
+                    <FormLabel>Kỹ năng chuyên môn (không có thì ghi "Không")</FormLabel>
+                    <FormControl><Textarea placeholder="vd: Python, React, Photoshop, Microsoft Office, AutoCAD..." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="programmingLanguages" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Programming Languages (if applicable)</FormLabel>
-                    <FormControl><Input placeholder="e.g., Java, Python, C++, JavaScript, PHP..." {...field} /></FormControl>
+                    <FormLabel>Ngôn ngữ lập trình (không có thì ghi "Không")</FormLabel>
+                    <FormControl><Input placeholder="vd: Java, Python, C++, JavaScript, PHP..." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="certifications" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Certifications & Licenses</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., AWS Certified, Google Analytics, TOEIC, IELTS, or type 'None'" {...field} /></FormControl>
+                    <FormLabel>Chứng chỉ & Giấy phép <span className="text-sm text-muted-foreground">(Không bắt buộc)</span></FormLabel>
+                    <FormControl><Textarea placeholder="vd: AWS Certified, Google Analytics, TOEIC, IELTS. Để trống nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="languageSkills" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Language Skills</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., Vietnamese (Native), English (Advanced), Japanese (Intermediate)..." {...field} /></FormControl>
+                    <FormLabel>Chứng chỉ ngoại ngữ <span className="text-sm text-muted-foreground">(Không bắt buộc)</span></FormLabel>
+                    <FormControl><Textarea placeholder="vd: TOEIC 850, IELTS 7.0, HSK Level 4. Để trống nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="workExperience" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Work Experience</FormLabel>
-                    <FormControl><Textarea placeholder="Describe your internships, part-time jobs, or type 'None'" {...field} /></FormControl>
+                    <FormLabel>Kinh nghiệm làm việc <span className="text-sm text-muted-foreground">(Không bắt buộc)</span></FormLabel>
+                    <FormControl><Textarea placeholder="Mô tả thực tập, công việc bán thời gian, volunteer work. Để trống nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -376,15 +440,15 @@ export default function SurveyWizard() {
               <>
                 <FormField control={form.control} name="extracurricularActivities" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Extracurricular Activities</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., Student council, volunteer at local shelter, coding club..." {...field} /></FormControl>
+                    <FormLabel>Hoạt động ngoại khóa</FormLabel>
+                    <FormControl><Textarea placeholder="vd: Tham gia Đoàn - Hội, tình nguyện tại địa phương/trường, Câu lạc bộ/Đội/Nhóm,..." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="awards" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Awards & Achievements</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., Science fair winner, debate team captain, 'None'..." {...field} /></FormControl>
+                    <FormLabel>Giải thưởng & Thành tích <span className="text-sm text-muted-foreground">(Không bắt buộc)</span></FormLabel>
+                    <FormControl><Textarea placeholder="vd: Giải nhất cuộc thi khoa học, đội trưởng đội tranh biện. Để trống nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -394,24 +458,24 @@ export default function SurveyWizard() {
               <>
                 <FormField control={form.control} name="familyIncome" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total Monthly Family Income</FormLabel>
+                    <FormLabel>Tổng thu nhập hàng n của gia đình</FormLabel>
                     <FormControl>
                         <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="grid grid-cols-2 gap-4">
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl><RadioGroupItem value="< $1,000" /></FormControl>
-                                <FormLabel className="font-normal">&lt; $1,000</FormLabel>
+                                <FormLabel className="font-normal">&lt; 30 triệu VND/năm</FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl><RadioGroupItem value="$1,000 - $2,500" /></FormControl>
-                                <FormLabel className="font-normal">$1,000 - $2,500</FormLabel>
+                                <FormLabel className="font-normal">30 triệu đến 118 triệu VND/năm</FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl><RadioGroupItem value="$2,501 - $5,000" /></FormControl>
-                                <FormLabel className="font-normal">$2,501 - $5,000</FormLabel>
+                                <FormLabel className="font-normal">118 triệu đến 367 triệu VND/năm</FormLabel>
                             </FormItem>
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl><RadioGroupItem value="> $5,000" /></FormControl>
-                                <FormLabel className="font-normal">&gt; $5,000</FormLabel>
+                                <FormLabel className="font-normal">&gt; 367 triệu VND/năm</FormLabel>
                             </FormItem>
                         </RadioGroup>
                     </FormControl>
@@ -420,15 +484,15 @@ export default function SurveyWizard() {
                 )} />
                 <FormField control={form.control} name="dependents" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Number of Dependents</FormLabel>
-                    <FormControl><Input type="number" placeholder="e.g., 2" {...field} /></FormControl>
+                    <FormLabel>Số người phụ thuộc</FormLabel>
+                    <FormControl><Input type="number" placeholder="vd: 2" {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="valuableAssets" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Valuable Family Assets</FormLabel>
-                    <FormControl><Textarea placeholder="e.g., House, car, land. Type 'None' if not applicable." {...field} /></FormControl>
+                    <FormLabel>Tài sản giá trị của gia đình</FormLabel>
+                    <FormControl><Textarea placeholder="vd: Nhà, xe, đất. Nhập 'Không có' nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -438,15 +502,15 @@ export default function SurveyWizard() {
               <>
                 <FormField control={form.control} name="medicalExpenses" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Special Medical Expenses</FormLabel>
-                    <FormControl><Textarea placeholder="Describe any significant, ongoing medical expenses for your family. Type 'None' if not applicable." {...field} /></FormControl>
+                    <FormLabel>Chi phí y tế đặc biệt</FormLabel>
+                    <FormControl><Textarea placeholder="Mô tả các chi phí y tế lớn, đang diễn ra của gia đình. Nhập 'Không có' nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="specialCircumstances" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Other Special Circumstances</FormLabel>
-                    <FormControl><Textarea placeholder="Describe any other challenges like job loss, natural disasters, etc. Type 'None' if not applicable." {...field} /></FormControl>
+                    <FormLabel>Hoàn cảnh đặc biệt khác</FormLabel>
+                    <FormControl><Textarea placeholder="Mô tả các khó khăn khác như mất việc, thiên tai... Nhập 'Không có' nếu không có." {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -456,25 +520,17 @@ export default function SurveyWizard() {
               <>
                 <FormField control={form.control} name="aspirations" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Aspirations Essay</FormLabel>
-                    <FormControl><Textarea rows={6} placeholder="Tell us about yourself, your dreams, and why you are seeking support." {...field} /></FormControl>
-                    <FormDescription>Min 50 characters.</FormDescription>
+                    <FormLabel>Bài luận về nguyện vọng</FormLabel>
+                    <FormControl><Textarea rows={6} placeholder="Hãy chia sẻ về bản thân, ước mơ và lý do bạn tìm kiếm sự hỗ trợ." {...field} /></FormControl>
+                    <FormDescription>Tối thiểu 50 ký tự.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
                 <FormField control={form.control} name="careerGoals" render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Career Goals & Future Plans</FormLabel>
-                    <FormControl><Textarea rows={4} placeholder="Describe your career goals for the next 5-10 years..." {...field} /></FormControl>
-                    <FormDescription>Min 50 characters.</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="recommendationLetter" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Upload Recommendation Letter</FormLabel>
-                    <FormControl><Input type="file" {...letterFileRef} /></FormControl>
-                    <FormDescription>From a teacher or local authority. PDF, JPG, or PNG. Max 5MB.</FormDescription>
+                    <FormLabel>Mục tiêu nghề nghiệp & Kế hoạch tương lai</FormLabel>
+                    <FormControl><Textarea rows={4} placeholder="Mô tả mục tiêu nghề nghiệp trong 5-10 năm tới..." {...field} /></FormControl>
+                    <FormDescription>Tối thiểu 50 ký tự.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )} />
@@ -484,15 +540,19 @@ export default function SurveyWizard() {
 
           <CardFooter className="flex justify-between">
             <Button type="button" variant="outline" onClick={handlePrev} disabled={currentStep === 0}>
-              Previous
+              Quay lại
             </Button>
             {currentStep < steps.length - 1 ? (
               <Button type="button" onClick={handleNext}>
-                Next
+                Tiếp theo
               </Button>
             ) : (
-              <Button type="submit" className="bg-accent hover:bg-accent/90">
-                Submit & Evaluate
+              <Button 
+                type="submit" 
+                className="bg-accent hover:bg-accent/90"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Đang xử lý...' : 'Gửi & Đánh giá'}
               </Button>
             )}
           </CardFooter>

@@ -93,8 +93,8 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-2" onClick={closeMenu}>
-            <img src="/images/logo.png" alt="HYHAN EDUCATION" className="h-6 hidden sm:inline"/>
-            <span className={cn( "text-xl font-bold text-primary")}>HYHAN EDUCATION</span>
+            {/* <img src="/images/logo.png" alt="HYHAN EDUCATION" className="h-6 hidden sm:inline"/>  */}
+            <span className={cn( "text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600")}>HYHAN EDUCATION</span>
           </Link>
           <nav className="hidden md:flex items-center gap-8">
           

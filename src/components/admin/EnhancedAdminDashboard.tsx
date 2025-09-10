@@ -240,8 +240,8 @@ export default function EnhancedAdminDashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Enhanced Admin Dashboard</h1>
-          <p className="text-muted-foreground">Comprehensive analytics and user management</p>
+          <h1 className="text-3xl font-bold">Bảng điều khiển Admin</h1>
+          <p className="text-muted-foreground">Phân tích toàn diện và quản lý người dùng</p>
         </div>
         <div className="flex items-center gap-4">
           <select 
@@ -249,25 +249,25 @@ export default function EnhancedAdminDashboard() {
             onChange={(e) => setTimeRange(e.target.value as any)}
             className="px-3 py-2 border rounded-md"
           >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="3m">Last 3 months</option>
-            <option value="1y">Last year</option>
+            <option value="7d">7 ngày trước</option>
+            <option value="30d">30 ngày trước</option>
+            <option value="3m">3 tháng trước</option>
+            <option value="1y">6 tháng trước</option>
           </select>
           <Button variant="outline">
             <Settings className="h-4 w-4 mr-2" />
-            Settings
+            Cài đặt
           </Button>
         </div>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+          <TabsTrigger value="users">Người dùng</TabsTrigger>
+          <TabsTrigger value="analytics">Phân tích</TabsTrigger>
+          <TabsTrigger value="scholarships">Học bổng</TabsTrigger>
+          <TabsTrigger value="system">Hệ thống</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -275,34 +275,34 @@ export default function EnhancedAdminDashboard() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">Tổng số người dùng</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{adminStats?.totalUsers.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground flex items-center">
                   <TrendingUp className="h-3 w-3 mr-1 text-green-500" />
-                  +{adminStats?.newUsersThisMonth} this month
+                  +{adminStats?.newUsersThisMonth} tháng này
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Today</CardTitle>
+                <CardTitle className="text-sm font-medium">Đang hoạt động</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{adminStats?.activeUsersToday}</div>
                 <p className="text-xs text-muted-foreground">
-                  {((adminStats?.activeUsersToday || 0) / (adminStats?.totalUsers || 1) * 100).toFixed(1)}% of total users
+                  {((adminStats?.activeUsersToday || 0) / (adminStats?.totalUsers || 1) * 100).toFixed(1)}% tổng số người dùng
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Avg EduScore</CardTitle>
+                <CardTitle className="text-sm font-medium">Điểm trung bình EduScore</CardTitle>
                 <Award className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -313,12 +313,12 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">Tỷ lệ tăng trưởng</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{adminStats?.platformGrowthRate}%</div>
-                <p className="text-xs text-muted-foreground">Monthly growth</p>
+                <p className="text-xs text-muted-foreground">Tăng trưởng tháng</p>
               </CardContent>
             </Card>
           </div>
@@ -327,8 +327,8 @@ export default function EnhancedAdminDashboard() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>User Growth Trend</CardTitle>
-                <CardDescription>New user registrations over time</CardDescription>
+                <CardTitle>Xu hướng tăng trưởng người dùng</CardTitle>
+                <CardDescription>Đăng ký người dùng mới theo thời gian</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -346,8 +346,8 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>EduScore Distribution</CardTitle>
-                <CardDescription>Distribution of user EduScores</CardDescription>
+                <CardTitle>Phân phối Eduscore</CardTitle>
+                <CardDescription>Phân phối Eduscores của người dùng</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -374,8 +374,8 @@ export default function EnhancedAdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Scholarship Applications</CardTitle>
-              <CardDescription>Monthly scholarship application trends</CardDescription>
+              <CardTitle>Hồ sơ xét học bổng</CardTitle>
+              <CardDescription>Xu hướng xét học bổng hàng tháng</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -385,8 +385,8 @@ export default function EnhancedAdminDashboard() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="applications" fill="hsl(var(--chart-1))" name="Applications" />
-                  <Bar dataKey="approved" fill="hsl(var(--chart-2))" name="Approved" />
+                  <Bar dataKey="applications" fill="hsl(var(--chart-1))" name="Đã nộp" />
+                  <Bar dataKey="approved" fill="hsl(var(--chart-2))" name="Đã duyệt" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -397,7 +397,7 @@ export default function EnhancedAdminDashboard() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">User Level Distribution</CardTitle>
+                <CardTitle className="text-lg">Phân phối cấp người dùng</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -416,7 +416,7 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Verification Status</CardTitle>
+                <CardTitle className="text-lg">Trạng thái xác minh</CardTitle>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={200}>
@@ -442,24 +442,24 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Quick Stats</CardTitle>
+                <CardTitle className="text-lg">Số liệu thống kê</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="text-sm">Verified Users</span>
+                    <span className="text-sm">Người dùng đã xác minh</span>
                     <Badge variant="default">{adminStats?.verifiedUsers}</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Pending Review</span>
+                    <span className="text-sm">Đang chờ xem xét</span>
                     <Badge variant="secondary">{adminStats?.pendingVerification}</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Forum Posts</span>
+                    <span className="text-sm">Bài viết trên diễn đàn</span>
                     <Badge variant="outline">{adminStats?.totalForumPosts}</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Total EduScores</span>
+                    <span className="text-sm">Tổng số Eduscores</span>
                     <Badge variant="outline">{adminStats?.totalEduScores}</Badge>
                   </div>
                 </div>
@@ -469,21 +469,21 @@ export default function EnhancedAdminDashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>Comprehensive user overview with detailed information</CardDescription>
+              <CardTitle>Quản lý người dùng</CardTitle>
+              <CardDescription>Tổng quan người dùng với thông tin chi tiết</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Level</TableHead>
-                    <TableHead>EduScore</TableHead>
-                    <TableHead>Verified Skills</TableHead>
-                    <TableHead>Forum Activity</TableHead>
-                    <TableHead>Applications</TableHead>
-                    <TableHead>Last Login</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead>Người dùng</TableHead>
+                    <TableHead>Cấp</TableHead>
+                    <TableHead>Điểm EduScore</TableHead>
+                    <TableHead>Kỹ năng đã xác minh</TableHead>
+                    <TableHead>Hoạt động diễn đàn</TableHead>
+                    <TableHead>Hồ sơ</TableHead>
+                    <TableHead>Đăng nhập lần cuối</TableHead>
+                    <TableHead>Thao tác</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -507,10 +507,10 @@ export default function EnhancedAdminDashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell>{userProfile.verifiedSkills}/10</TableCell>
-                      <TableCell>{userProfile.forumPosts} posts</TableCell>
+                      <TableCell>{userProfile.forumPosts} bài viết</TableCell>
                       <TableCell>{userProfile.scholarshipApplications}</TableCell>
                       <TableCell className="text-muted-foreground text-sm">
-                        {userProfile.lastLogin ? format(userProfile.lastLogin, 'MMM dd, HH:mm') : 'Never'}
+                        {userProfile.lastLogin ? format(userProfile.lastLogin, 'MMM dd, HH:mm') : 'Chưa từng'}
                       </TableCell>
                       <TableCell>
                         <Dialog>
@@ -521,8 +521,8 @@ export default function EnhancedAdminDashboard() {
                           </DialogTrigger>
                           <DialogContent className="max-w-3xl">
                             <DialogHeader>
-                              <DialogTitle>User Details: {selectedUser?.name}</DialogTitle>
-                              <DialogDescription>Comprehensive user profile information</DialogDescription>
+                              <DialogTitle>Chi tiết người dùng: {selectedUser?.name}</DialogTitle>
+                              <DialogDescription>Thông tin hồ sơ người dùng chi tiết</DialogDescription>
                             </DialogHeader>
                             {selectedUser && (
                               <div className="grid gap-6">
@@ -532,30 +532,30 @@ export default function EnhancedAdminDashboard() {
                                     <p className="text-muted-foreground">{selectedUser.email}</p>
                                   </div>
                                   <div>
-                                    <p className="font-semibold">Account Level</p>
-                                    <p className="text-muted-foreground">{getAccountLevelName(selectedUser.accountLevel)} (Level {selectedUser.accountLevel})</p>
+                                    <p className="font-semibold">Cấp tài khoản</p>
+                                    <p className="text-muted-foreground">{getAccountLevelName(selectedUser.accountLevel)} (Cấp {selectedUser.accountLevel})</p>
                                   </div>
                                   <div>
-                                    <p className="font-semibold">EduScore</p>
-                                    <p className="text-muted-foreground">{selectedUser.eduScore || 'Not completed'}</p>
+                                    <p className="font-semibold">Điểm EduScore</p>
+                                    <p className="text-muted-foreground">{selectedUser.eduScore || 'Chưa hoàn thành'}</p>
                                   </div>
                                   <div>
-                                    <p className="font-semibold">Verified Skills</p>
-                                    <p className="text-muted-foreground">{selectedUser.verifiedSkills} verified</p>
+                                    <p className="font-semibold">Kỹ năng đã xác minh</p>
+                                    <p className="text-muted-foreground">{selectedUser.verifiedSkills} đã xác minh</p>
                                   </div>
                                   <div>
-                                    <p className="font-semibold">Forum Activity</p>
-                                    <p className="text-muted-foreground">{selectedUser.forumPosts} posts</p>
+                                    <p className="font-semibold">Hoạt động diễn đàn</p>
+                                    <p className="text-muted-foreground">{selectedUser.forumPosts} bài viết</p>
                                   </div>
                                   <div>
-                                    <p className="font-semibold">Applications</p>
-                                    <p className="text-muted-foreground">{selectedUser.scholarshipApplications} scholarship applications</p>
+                                    <p className="font-semibold">Hồ sơ</p>
+                                    <p className="text-muted-foreground">{selectedUser.scholarshipApplications} hồ sơ học bổng</p>
                                   </div>
                                 </div>
                                 <div className="flex gap-2">
-                                  <Button variant="outline" size="sm">Send Message</Button>
-                                  <Button variant="outline" size="sm">View Full Profile</Button>
-                                  <Button variant="destructive" size="sm">Suspend Account</Button>
+                                  <Button variant="outline" size="sm">Gửi tin nhắn</Button>
+                                  <Button variant="outline" size="sm">Xem hồ sơ đầy đủ</Button>
+                                  <Button variant="destructive" size="sm">Khoá tài khoản</Button>
                                 </div>
                               </div>
                             )}
@@ -574,8 +574,8 @@ export default function EnhancedAdminDashboard() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Skills Verification Analytics</CardTitle>
-                <CardDescription>Verified vs unverified skills breakdown</CardDescription>
+                <CardTitle>Phân tích xác minh kỹ năng</CardTitle>
+                <CardDescription>So sánh kỹ năng đã xác minh và chưa xác minh</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -585,8 +585,8 @@ export default function EnhancedAdminDashboard() {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="verified" fill="hsl(var(--chart-1))" name="Verified" />
-                    <Bar dataKey="unverified" fill="hsl(var(--chart-5))" name="Unverified" />
+                    <Bar dataKey="verified" fill="hsl(var(--chart-1))" name="Đã xác minh" />
+                    <Bar dataKey="unverified" fill="hsl(var(--chart-5))" name="Chưa xác minh" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -594,8 +594,8 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>User Activity by Time</CardTitle>
-                <CardDescription>Forum posts and login activity throughout the day</CardDescription>
+                <CardTitle>Hoạt động người dùng theo thời gian</CardTitle>
+                <CardDescription>Bài viết diễn đàn và đăng nhập trong ngày</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -605,8 +605,8 @@ export default function EnhancedAdminDashboard() {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line type="monotone" dataKey="posts" stroke="hsl(var(--chart-1))" name="Forum Posts" />
-                    <Line type="monotone" dataKey="logins" stroke="hsl(var(--chart-2))" name="User Logins" />
+                    <Line type="monotone" dataKey="posts" stroke="hsl(var(--chart-1))" name="Bài viết diễn đàn" />
+                    <Line type="monotone" dataKey="logins" stroke="hsl(var(--chart-2))" name="Lượt đăng nhập" />
                   </RechartsLineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -618,20 +618,20 @@ export default function EnhancedAdminDashboard() {
           <div className="grid gap-6 md:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Application Stats</CardTitle>
+                <CardTitle className="text-lg">Thống kê hồ sơ</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span>Total Applications</span>
+                    <span>Tổng số hồ sơ</span>
                     <Badge>{adminStats?.totalScholarshipApplications}</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span>Approved</span>
+                    <span>Đã duyệt</span>
                     <Badge variant="default">{adminStats?.approvedApplications}</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span>Success Rate</span>
+                    <span>Tỷ lệ thành công</span>
                     <Badge variant="outline">
                       {adminStats ? ((adminStats.approvedApplications / adminStats.totalScholarshipApplications) * 100).toFixed(1) : 0}%
                     </Badge>
@@ -642,16 +642,16 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Revenue Impact</CardTitle>
+                <CardTitle className="text-lg">Ảnh hưởng doanh thu</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span>Total Distributed</span>
+                    <span>Tổng phân phối</span>
                     <Badge>${adminStats?.totalRevenue.toLocaleString()}</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span>Avg. per Student</span>
+                    <span>Trung bình mỗi sinh viên</span>
                     <Badge variant="outline">
                       ${adminStats ? Math.round(adminStats.totalRevenue / adminStats.approvedApplications).toLocaleString() : 0}
                     </Badge>
@@ -662,20 +662,20 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Processing Queue</CardTitle>
+                <CardTitle className="text-lg">Hàng chờ xử lý</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span>Pending Review</span>
+                    <span>Đang chờ duyệt</span>
                     <Badge variant="secondary">234</Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span>Requires Action</span>
+                    <span>Cần xử lý</span>
                     <Badge variant="destructive">12</Badge>
                   </div>
                   <Button size="sm" className="w-full mt-4">
-                    Review Applications
+                    Xem xét hồ sơ
                   </Button>
                 </div>
               </CardContent>
@@ -687,25 +687,25 @@ export default function EnhancedAdminDashboard() {
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>System Health</CardTitle>
-                <CardDescription>Platform performance metrics</CardDescription>
+                <CardTitle>Tình trạng hệ thống</CardTitle>
+                <CardDescription>Chỉ số hiệu suất nền tảng</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span>Server Uptime</span>
+                    <span>Thời gian hoạt động của máy chủ</span>
                     <Badge variant="default">99.9%</Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Database Performance</span>
+                    <span>Hiệu suất cơ sở dữ liệu</span>
                     <Badge variant="default">Excellent</Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>API Response Time</span>
+                    <span>Thời gian phản hồi API</span>
                     <Badge variant="outline">45ms avg</Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Storage Usage</span>
+                    <span>Mức sử dụng lưu trữ</span>
                     <Badge variant="secondary">67%</Badge>
                   </div>
                 </div>
@@ -714,25 +714,25 @@ export default function EnhancedAdminDashboard() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Security Overview</CardTitle>
-                <CardDescription>Security metrics and alerts</CardDescription>
+                <CardTitle>Tổng quan bảo mật</CardTitle>
+                <CardDescription>Chỉ số và cảnh báo bảo mật</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span>Failed Login Attempts</span>
-                    <Badge variant="destructive">23 today</Badge>
+                    <span>Số lần đăng nhập thất bại</span>
+                    <Badge variant="destructive">23 hôm nay</Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Suspicious Activity</span>
-                    <Badge variant="outline">0 alerts</Badge>
+                    <span>Hoạt động đáng ngờ</span>
+                    <Badge variant="outline">0 cảnh báo</Badge>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span>Blocked IPs</span>
+                    <span>Địa chỉ IP bị chặn</span>
                     <Badge variant="secondary">12</Badge>
                   </div>
                   <Button variant="outline" size="sm" className="w-full">
-                    View Security Logs
+                    Xem nhật ký bảo mật
                   </Button>
                 </div>
               </CardContent>

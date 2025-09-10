@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
             className="inline-flex items-center text-sm text-muted-foreground hover:text-primary"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Login
+            Quay lại đăng nhập
           </Link>
         </div>
         <ForgotPasswordForm />

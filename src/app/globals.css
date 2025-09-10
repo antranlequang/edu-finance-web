@@ -1,3 +1,8 @@
+@layer base {
+  .font-anton {
+    font-family: 'Anton SC', sans-serif;
+  }
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

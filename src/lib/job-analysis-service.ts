@@ -57,73 +57,145 @@ const majorJobData: Record<string, JobRequirementAnalysis> = {
   }
 };
 
+// Helper function to check if data is meaningful
+const hasValidData = (data: string | undefined): boolean => {
+  return data && 
+         data.trim() !== '' && 
+         data.toLowerCase() !== 'none' && 
+         data.toLowerCase() !== 'không có' &&
+         data.toLowerCase() !== 'không' &&
+         data !== 'No data to analyze';
+};
+
 export async function analyzeJobRequirements(eduscoreData: EduscoreData): Promise<JobRequirementAnalysis> {
-  // Simulate API delay for better UX
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  // Simulate AI analysis delay for better UX
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
   try {
-    // Get base analysis for the major
-    let analysis = majorJobData[eduscoreData.major] || {
-      strengths: [`Academic background in ${eduscoreData.major}`, 'Motivated to learn', 'Good educational foundation'],
-      weaknesses: ['Limited work experience', 'Need more industry exposure', 'Lack of professional network'],
-      recommendations: ['Gain practical experience through internships', 'Build a professional network', 'Develop relevant technical skills', 'Join professional associations', 'Create a strong portfolio'],
-      suitableJobTypes: ['Entry-level positions', 'Internships', 'Graduate trainee programs', 'Junior roles in your field'],
-      skillsToImprove: ['Communication skills', 'Technical skills', 'Leadership abilities', 'Problem-solving skills']
+    // Map Vietnamese major names to English for analysis
+    const majorMapping: Record<string, string> = {
+      "Khoa học máy tính": "Computer Science",
+      "Quản trị kinh doanh": "Business Administration", 
+      "Marketing": "Marketing",
+      "Kỹ thuật": "Engineering",
+      "Kinh tế": "Economics",
+      "Công nghệ thông tin": "Computer Science",
+      "Kế toán": "Business Administration",
+      "Tài chính": "Economics"
     };
 
-    // Customize based on EduScore and other factors
-    const customizedAnalysis = { ...analysis };
+    const mappedMajor = majorMapping[eduscoreData.major] || "General Studies";
+    
+    // Get base analysis for the major
+    let analysis = majorJobData[mappedMajor] || {
+      strengths: [`Nền tảng học thuật vững chắc trong ${eduscoreData.major}`, 'Động lực học tập cao', 'Tư duy phân tích tốt'],
+      weaknesses: ['Hạn chế về kinh nghiệm thực tiễn', 'Cần mở rộng mạng lưới nghề nghiệp', 'Cần phát triển kỹ năng chuyên môn'],
+      recommendations: ['Tích lũy kinh nghiệm qua thực tập', 'Xây dựng mạng lưới chuyên nghiệp', 'Phát triển kỹ năng chuyên môn', 'Tham gia các tổ chức nghề nghiệp', 'Xây dựng portfolio mạnh'],
+      suitableJobTypes: ['Vị trí entry-level', 'Chương trình thực tập', 'Chương trình đào tạo sau đại học', 'Vị trí junior trong ngành'],
+      skillsToImprove: ['Kỹ năng giao tiếp', 'Kỹ năng chuyên môn', 'Khả năng lãnh đạo', 'Kỹ năng giải quyết vấn đề']
+    };
 
-    // Adjust based on EduScore
+    // Deep copy for customization
+    const customizedAnalysis: JobRequirementAnalysis = JSON.parse(JSON.stringify(analysis));
+
+    // AI-based analysis adjustments based on available data
+
+    // Adjust based on EduScore - Primary indicator
     if (eduscoreData.score >= 85) {
-      customizedAnalysis.strengths.unshift("Outstanding academic performance");
-      customizedAnalysis.suitableJobTypes.unshift("Fast-track management programs", "Competitive graduate schemes");
+      customizedAnalysis.strengths.unshift("Thành tích học tập xuất sắc (EduScore 85+)");
+      customizedAnalysis.suitableJobTypes.unshift("Chương trình quản lý tài năng", "Chương trình đào tạo cạnh tranh cao");
+      customizedAnalysis.recommendations.unshift("Tập trung vào cơ hội phát triển cao cấp");
     } else if (eduscoreData.score >= 70) {
-      customizedAnalysis.strengths.unshift("Strong academic performance");
+      customizedAnalysis.strengths.unshift("Thành tích học tập tốt (EduScore 70+)");
+      customizedAnalysis.recommendations.unshift("Tiếp tục duy trì thành tích tốt");
+    } else if (eduscoreData.score >= 50) {
+      customizedAnalysis.strengths.push("Có tiềm năng phát triển");
+      customizedAnalysis.recommendations.unshift("Cải thiện thành tích học tập để mở rộng cơ hội");
     } else {
-      customizedAnalysis.weaknesses.push("Need to improve academic performance");
-      customizedAnalysis.recommendations.push("Focus on improving GPA and academic skills");
+      customizedAnalysis.weaknesses.unshift("Cần cải thiện đáng kể thành tích học tập");
+      customizedAnalysis.recommendations.unshift("Ưu tiên nâng cao GPA và kỹ năng học thuật");
     }
 
-    // Adjust based on GPA
+    // GPA Analysis - Secondary academic indicator
     if (eduscoreData.academicInfoGPA >= 3.5) {
-      customizedAnalysis.strengths.push("Excellent GPA demonstrates academic excellence");
-    } else if (eduscoreData.academicInfoGPA < 3.0) {
-      customizedAnalysis.weaknesses.push("GPA below industry expectations");
-      customizedAnalysis.recommendations.push("Work on improving academic performance");
+      customizedAnalysis.strengths.push(`GPA xuất sắc (${eduscoreData.academicInfoGPA}/4.0) thể hiện năng lực học tập`);
+    } else if (eduscoreData.academicInfoGPA >= 3.0) {
+      customizedAnalysis.strengths.push(`GPA tốt (${eduscoreData.academicInfoGPA}/4.0) cho thấy nền tảng vững chắc`);
+    } else if (eduscoreData.academicInfoGPA > 0) {
+      customizedAnalysis.weaknesses.push(`GPA cần cải thiện (${eduscoreData.academicInfoGPA}/4.0)`);
+      customizedAnalysis.recommendations.push("Tập trung nâng cao điểm số học tập");
     }
 
-    // Adjust based on extracurricular activities
-    if (eduscoreData.extracurricularActivities && eduscoreData.extracurricularActivities.toLowerCase() !== 'none') {
-      customizedAnalysis.strengths.push("Active in extracurricular activities showing leadership potential");
+    // Extracurricular Activities Analysis - Leadership & engagement indicator
+    if (hasValidData(eduscoreData.extracurricularActivities)) {
+      customizedAnalysis.strengths.push("Tích cực tham gia hoạt động ngoại khóa thể hiện khả năng lãnh đạo");
+      if (eduscoreData.extracurricularActivities.toLowerCase().includes('chủ tịch') || 
+          eduscoreData.extracurricularActivities.toLowerCase().includes('leader') ||
+          eduscoreData.extracurricularActivities.toLowerCase().includes('captain')) {
+        customizedAnalysis.strengths.push("Kinh nghiệm lãnh đạo qua các vị trí quan trọng");
+        customizedAnalysis.skillsToImprove = customizedAnalysis.skillsToImprove.filter(s => s !== 'Khả năng lãnh đạo');
+      }
     } else {
-      customizedAnalysis.weaknesses.push("Limited extracurricular involvement");
-      customizedAnalysis.recommendations.push("Participate in student organizations and volunteer activities");
+      customizedAnalysis.weaknesses.push("Ít tham gia hoạt động ngoại khóa");
+      customizedAnalysis.recommendations.push("Tham gia tổ chức sinh viên và hoạt động tình nguyện");
     }
 
-    // Adjust based on awards
-    if (eduscoreData.awards && eduscoreData.awards.toLowerCase() !== 'none') {
-      customizedAnalysis.strengths.push("Recognition through awards demonstrates excellence");
+    // Awards Analysis - Excellence indicator
+    if (hasValidData(eduscoreData.awards)) {
+      customizedAnalysis.strengths.push("Đạt được giải thưởng thể hiện sự xuất sắc");
+      if (eduscoreData.awards.toLowerCase().includes('nhất') || 
+          eduscoreData.awards.toLowerCase().includes('first') ||
+          eduscoreData.awards.toLowerCase().includes('gold')) {
+        customizedAnalysis.strengths.push("Giải thưởng cao thể hiện năng lực vượt trội");
+      }
+    } else {
+      // Not a weakness if student is early in career - more neutral
+      if (!eduscoreData.currentYear.includes('1st')) {
+        customizedAnalysis.recommendations.push("Tham gia các cuộc thi để thể hiện năng lực");
+      }
     }
 
-    // Adjust based on academic year
-    if (eduscoreData.currentYear.includes('1st') || eduscoreData.currentYear.includes('2nd')) {
-      customizedAnalysis.recommendations.push("Focus on building foundational skills early");
-      customizedAnalysis.suitableJobTypes = customizedAnalysis.suitableJobTypes.filter(job => 
-        job.includes('Intern') || job.includes('Part-time') || job.includes('Assistant')
-      );
+    // Academic Year Analysis - Experience level indicator
+    if (eduscoreData.currentYear.includes('1st') || eduscoreData.currentYear.includes('Năm một')) {
+      customizedAnalysis.recommendations.unshift("Bắt đầu xây dựng kỹ năng nền tảng ngay từ sớm");
+      customizedAnalysis.suitableJobTypes = ['Thực tập sinh', 'Công việc bán thời gian', 'Trợ lý junior'];
+      customizedAnalysis.strengths.push("Thời gian còn nhiều để phát triển và học hỏi");
+    } else if (eduscoreData.currentYear.includes('4th') || eduscoreData.currentYear.includes('Năm tư')) {
+      customizedAnalysis.recommendations.unshift("Chuẩn bị tích cực cho việc làm sau tốt nghiệp");
+      customizedAnalysis.suitableJobTypes.unshift("Graduate trainee programs", "Entry-level full-time positions");
+    }
+
+    // University prestige factor (basic analysis)
+    if (eduscoreData.university.toLowerCase().includes('bách khoa') || 
+        eduscoreData.university.toLowerCase().includes('kinh tế') ||
+        eduscoreData.university.toLowerCase().includes('quốc gia')) {
+      customizedAnalysis.strengths.push(`Đang học tại ${eduscoreData.university} - trường có uy tín`);
+    }
+
+    // Aspirations analysis - Future direction indicator
+    if (hasValidData(eduscoreData.aspirations)) {
+      if (eduscoreData.aspirations.toLowerCase().includes('khởi nghiệp') || 
+          eduscoreData.aspirations.toLowerCase().includes('startup')) {
+        customizedAnalysis.recommendations.push("Phát triển kỹ năng kinh doanh và networking cho khởi nghiệp");
+        customizedAnalysis.skillsToImprove.push("Kỹ năng kinh doanh", "Quản lý dự án");
+      }
+      if (eduscoreData.aspirations.toLowerCase().includes('nghiên cứu') || 
+          eduscoreData.aspirations.toLowerCase().includes('research')) {
+        customizedAnalysis.recommendations.push("Tập trung vào nghiên cứu khoa học và học lên cao");
+        customizedAnalysis.suitableJobTypes.push("Trợ lý nghiên cứu", "Thực tập nghiên cứu");
+      }
     }
 
     return customizedAnalysis;
   } catch (error) {
-    console.error('Error analyzing job requirements:', error);
-    // Return default analysis in case of error
+    console.error('Error in AI job analysis:', error);
+    // Return intelligent default analysis
     return {
-      strengths: [`Academic background in ${eduscoreData.major}`, 'Strong motivation to learn'],
-      weaknesses: ['Limited work experience', 'Need more industry exposure'],
-      recommendations: ['Gain practical experience through internships', 'Build a professional network', 'Develop technical skills'],
-      suitableJobTypes: ['Entry-level positions', 'Internships', 'Graduate trainee programs'],
-      skillsToImprove: ['Communication skills', 'Technical skills', 'Leadership abilities']
+      strengths: [`Nền tảng học thuật trong ${eduscoreData.major}`, 'Động lực học tập cao', 'Tiềm năng phát triển tốt'],
+      weaknesses: ['Cần tích lũy thêm kinh nghiệm thực tiễn', 'Cần mở rộng mạng lưới nghề nghiệp'],
+      recommendations: ['Tham gia thực tập để có kinh nghiệm', 'Xây dựng mạng lưới chuyên nghiệp', 'Phát triển kỹ năng mềm'],
+      suitableJobTypes: ['Vị trí entry-level', 'Chương trình thực tập', 'Trợ lý junior'],
+      skillsToImprove: ['Kỹ năng giao tiếp', 'Kỹ năng chuyên môn', 'Làm việc nhóm']
     };
   }
 }

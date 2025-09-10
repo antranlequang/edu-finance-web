@@ -171,11 +171,35 @@ export default function EnhancedProfileDashboard() {
             setVerificationDocs(documents);
           }
 
-          // Set mock data
-          setUserSkills(mockSkills);
-          setUserEducation(mockEducation);
-          setUserExperience(mockExperience);
-          setProfileStats(mockProfileStats);
+          // Only set mock data for the sample user account and admin account
+          if (user.email === 'user@hyhan.com' || user.role === 'admin') {
+            setUserSkills(mockSkills);
+            setUserEducation(mockEducation);
+            setUserExperience(mockExperience);
+            setProfileStats(mockProfileStats);
+          } else {
+            // For all other users, start with empty data
+            setUserSkills([]);
+            setUserEducation([]);
+            setUserExperience([]);
+            setProfileStats({
+              totalSkills: 0,
+              verifiedSkills: 0,
+              totalEducation: 0,
+              verifiedEducation: 0,
+              totalExperience: 0,
+              verifiedExperience: 0,
+              profileCompleteness: 10, // Base completeness for having an account
+              accountLevel: user.accountLevel || 1,
+              nextLevelRequirements: [
+                'Complete your profile information',
+                'Add at least 3 skills',
+                'Add education history',
+                'Add work experience',
+                'Complete EduScore assessment'
+              ]
+            });
+          }
         } catch (error) {
           console.error('Error loading user data:', error);
         }

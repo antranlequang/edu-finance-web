@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'Email và mật khẩu là bắt buộc' },
         { status: 400 }
       );
     }

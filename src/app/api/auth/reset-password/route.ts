@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     if (!email || !captcha || !newPassword) {
       return NextResponse.json(
-        { error: 'Email, captcha, and new password are required' },
+        { error: 'Email, captcha và mật khẩu mới là bắt buộc' },
         { status: 400 }
       );
     }
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const user = await getUserByEmail(email);
     if (!user) {
       return NextResponse.json(
-        { error: 'User not found' },
+        { error: 'Không tìm thấy người dùng' },
         { status: 404 }
       );
     }
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       .where(eq(users.id, user.id));
 
     return NextResponse.json({ 
-      message: 'Password reset successfully' 
+      message: 'Mật khẩu đã được đặt lại thành công' 
     });
   } catch (error: any) {
     console.error('Password reset error:', error);

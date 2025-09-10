@@ -206,10 +206,10 @@ export default function FinancePage() {
             <Header />
             <main className="flex-grow">
                 {/* Hero Section */}
-                <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center text-center overflow-hidden">
+                <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center text-center">
                     <div className="flex flex-col items-center">
-                        <h1 className="text-4xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6 animate-fade-in">
-                            HỖ TRỢ TÀI CHÍNH
+                        <h1 className="text-6xl md:text-8xl font-bold font-anton tracking-wider leading-normal pt-6 pb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6">
+                        HỖ TRỢ TÀI CHÍNH
                         </h1>
                         <p className="text-base md:text-2xl italic">"Đồng hành hôm nay, tiếp bước ngày mai"</p>
                     </div>

@@ -36,7 +36,7 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (!loading && user) {
-      const destination = user.role === 'admin' ? '/admin/dashboard' : '/profile';
+      const destination = user.role === 'admin' ? '/admin/dashboard' : '/';
       router.replace(destination);
     }
   }, [user, loading, router]);
@@ -78,7 +78,7 @@ export default function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center mb-2">TRANG ĐĂNG NHẬP</CardTitle>
+        <CardTitle className="text-center mb-2">ĐĂNG NHẬP</CardTitle>
         <CardDescription className="text-center">Nhập thông tin đăng nhập để truy cập tài khoản của bạn.</CardDescription>
       </CardHeader>
       <CardContent>

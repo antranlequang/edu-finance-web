@@ -8,13 +8,13 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">EduGuideAI</span>
+            <span className="text-2xl font-bold text-primary">Hyhan Education</span>
         </Link>
         <RegisterForm />
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Already have an account?{' '}
+          Đã có tài khoản?{' '}
           <Link href="/login" className="font-medium text-primary hover:underline">
-            Login
+            Đăng nhập
           </Link>
         </p>
       </div>

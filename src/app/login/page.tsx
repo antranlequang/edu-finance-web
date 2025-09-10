@@ -8,7 +8,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center justify-center gap-2 mb-8">
             <GraduationCap className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">EduGuideAI</span>
+            <span className="text-2xl font-bold text-primary">Hyhan Education</span>
         </Link>
         <LoginForm />
          <p className="mt-4 text-center text-sm text-muted-foreground">

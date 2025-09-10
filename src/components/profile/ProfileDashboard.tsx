@@ -82,8 +82,8 @@ export default function ProfileDashboard() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-2">Welcome, {user.name || user.email || 'Student'}!</h1>
-      <p className="text-muted-foreground mb-8">This is your personal dashboard. Track your progress and find opportunities.</p>
+      <h1 className="text-3xl font-bold mb-2">Xin chào bạn {user.name || user.email || 'Student'}!</h1>
+      <p className="text-muted-foreground mb-8">Đây là bảng thông tin cá nhân của bạn. Theo dõi tiến trình và tìm kiếm cơ hội.</p>
       
       <div className="grid gap-8 md:grid-cols-3">
         <div className="md:col-span-2 space-y-8">
@@ -92,70 +92,70 @@ export default function ProfileDashboard() {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <LayoutDashboard />
-                        Admin Access
+                        Admin truy cập thành công
                     </CardTitle>
-                    <CardDescription>You have administrative privileges.</CardDescription>
+                    <CardDescription>You có quyền quản trị.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground">Access the admin dashboard to manage users, applications, and site content.</p>
+                    <p className="text-sm text-muted-foreground">Truy cập bảng điều khiển quản trị để quản lý người dùng, ứng dụng và nội dung trang web.</p>
                 </CardContent>
                 <CardFooter>
                     <Button asChild>
-                        <Link href="/admin/dashboard">Go to Admin Dashboard</Link>
+                        <Link href="/admin/dashboard">Truy cập Bảng điều khiển Quản trị</Link>
                     </Button>
                 </CardFooter>
               </Card>
             )}
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Award /> Your Eduscore</CardTitle>
-                {!eduscoreResult && (
-                  <CardDescription>
-                    You haven&apos;t completed the survey yet. Your Eduscore helps match you with scholarships.
-                  </CardDescription>
-                )}
-              </CardHeader>
-              {eduscoreResult ? (
-                <>
-                  <CardContent className="grid md:grid-cols-2 gap-8 items-center">
-                    <div className="h-48">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RadialBarChart innerRadius="70%" outerRadius="100%" data={chartData} startAngle={90} endAngle={-270}>
-                          <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-                          <RadialBar background dataKey='value' cornerRadius={10} />
-                          <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-4xl font-bold fill-foreground">
-                            {eduscoreResult.score}
-                          </text>
-                          <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" className="text-md fill-muted-foreground">
-                            / 100
-                          </text>
-                        </RadialBarChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-lg mb-2 text-primary">AI Evaluation Summary</h3>
-                        <p className="text-sm text-muted-foreground italic">&quot;{eduscoreResult.reasoning}&quot;</p>
-                    </div>
-                  </CardContent>
-                  <CardFooter className='flex-col items-start gap-4'>
-                    <p className='text-sm text-muted-foreground'>Your score is now being used to recommend scholarships for you.</p>
-                    <Button asChild>
-                        <Link href="/scholarship">
-                            View Matching Scholarships <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                    </Button>
-                  </CardFooter>
-                </>
-              ) : (
-                <CardContent className="flex flex-col items-center justify-center text-center p-12">
-                  <p className="text-muted-foreground mb-4">Complete the Eduscore survey to unlock financial aid opportunities and personalized scholarship matching.</p>
-                  <Button asChild>
-                    <Link href="/survey">Take the Survey</Link>
-                  </Button>
-                </CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Award /> Điểm Eduscore của bạn</CardTitle>
+              {!eduscoreResult && (
+                <CardDescription>
+                  Bạn chưa hoàn thành khảo sát. Điểm Eduscore sẽ giúp hệ thống gợi ý học bổng phù hợp cho bạn.
+                </CardDescription>
               )}
-            </Card>
+            </CardHeader>
+            {eduscoreResult ? (
+              <>
+                <CardContent className="grid md:grid-cols-2 gap-8 items-center">
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadialBarChart innerRadius="70%" outerRadius="100%" data={chartData} startAngle={90} endAngle={-270}>
+                        <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                        <RadialBar background dataKey='value' cornerRadius={10} />
+                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="text-4xl font-bold fill-foreground">
+                          {eduscoreResult.score}
+                        </text>
+                        <text x="50%" y="65%" textAnchor="middle" dominantBaseline="middle" className="text-md fill-muted-foreground">
+                          / 100
+                        </text>
+                      </RadialBarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div>
+                      <h3 className="font-semibold text-lg mb-2 text-primary">Tóm tắt đánh giá AI</h3>
+                      <p className="text-sm text-muted-foreground italic">&quot;{eduscoreResult.reasoning}&quot;</p>
+                  </div>
+                </CardContent>
+                <CardFooter className='flex-col items-start gap-4'>
+                  <p className='text-sm text-muted-foreground'>Điểm số này đang được sử dụng để đề xuất học bổng phù hợp cho bạn.</p>
+                  <Button asChild>
+                      <Link href="/scholarship">
+                          Xem học bổng phù hợp <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                  </Button>
+                </CardFooter>
+              </>
+            ) : (
+              <CardContent className="flex flex-col items-center justify-center text-center p-12">
+                <p className="text-muted-foreground mb-4">Hãy hoàn thành khảo sát Eduscore để mở khóa cơ hội hỗ trợ tài chính và được gợi ý học bổng cá nhân hóa.</p>
+                <Button asChild>
+                  <Link href="/survey">Làm khảo sát</Link>
+                </Button>
+              </CardContent>
+            )}
+          </Card>
         </div>
         
         <div className="space-y-6">

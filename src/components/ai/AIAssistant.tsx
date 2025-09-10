@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth-neon';
+import { useChatHistory } from '@/lib/chat-history-service';
+import { useEduscore } from '@/lib/eduscore-service';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   MessageSquare, Send, Bot, User, Sparkles, TrendingUp, 
   Award, Search, BookOpen, DollarSign, Target, Lightbulb,
-  FileText, ExternalLink, Star, ThumbsUp, ThumbsDown, Clock, Zap
+  FileText, ExternalLink, Star, ThumbsUp, ThumbsDown, Clock, Zap, CheckCircle2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -49,33 +51,75 @@ interface ScholarshipRecommendation {
 
 export default function AIAssistant() {
   const { user } = useAuth();
+  const { getRecommendationContext } = useEduscore();
+  const { loadHistory, saveHistory, clearHistory } = useChatHistory(user?.id);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with welcome message
+  // Initialize with chat history or welcome message
   useEffect(() => {
     if (messages.length === 0) {
-      const welcomeMessage: ChatMessage = {
-        id: 'welcome',
-        type: 'assistant',
-        content: `Hello ${user?.name || 'there'}! 👋 I'm your AI assistant for education and scholarships. I can help you with:\n\n🎯 Find scholarships\n📊 Improve your EduScore\n📚 Course recommendations\n💡 Career guidance\n\nWhat would you like to know?`,
-        timestamp: new Date(),
-        suggestedActions: [
-          { label: 'Find Scholarships', action: 'find_scholarships' },
-          { label: 'Improve EduScore', action: 'improve_eduscore' },
-          { label: 'Career Advice', action: 'career_advice' },
-          { label: 'Course Recommendations', action: 'course_recommendations' }
-        ]
-      };
-      setMessages([welcomeMessage]);
+      // Load existing chat history first
+      const history = loadHistory();
+      
+      if (history.length > 0) {
+        // Convert history format to ChatMessage format
+        const convertedMessages: ChatMessage[] = history.map(msg => ({
+          id: Date.now().toString() + Math.random(),
+          type: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.timestamp || new Date()),
+          suggestedActions: msg.role === 'model' ? [
+            { label: 'Ask Another Question', action: 'continue' },
+            { label: 'Find Scholarships', action: 'find_scholarships' },
+            { label: 'Browse Courses', action: 'browse_courses' },
+          ] : undefined
+        }));
+        setMessages(convertedMessages);
+      } else {
+        // Create personalized welcome message
+        const eduscoreContext = getRecommendationContext();
+        let welcomeContent = `Xin chào ${user?.name || 'bạn'}! 👋 Tôi là trợ lý AI của HYHAN về giáo dục và học bổng.\n\n`;
+        
+        if (eduscoreContext?.eduscore) {
+          welcomeContent += `Tôi thấy bạn có EduScore ${eduscoreContext.eduscore}/100`;
+          if (eduscoreContext.major) {
+            welcomeContent += ` và đang học ${eduscoreContext.major}`;
+          }
+          welcomeContent += `. Tuyệt vời!\n\n`;
+        }
+        
+        welcomeContent += `Tôi có thể giúp bạn về:\n\n🎯 Tìm học bổng phù hợp\n📊 Cải thiện EduScore\n📚 Gợi ý khóa học\n💡 Tư vấn nghề nghiệp\n💰 Hỗ trợ tài chính\n\nBạn muốn tìm hiểu về gì?`;
+
+        const welcomeMessage: ChatMessage = {
+          id: 'welcome',
+          type: 'assistant',
+          content: welcomeContent,
+          timestamp: new Date(),
+          suggestedActions: [
+            { label: 'Tìm Học Bổng', action: 'find_scholarships' },
+            { label: 'Cải Thiện EduScore', action: 'improve_eduscore' },
+            { label: 'Tư Vấn Nghề Nghiệp', action: 'career_advice' },
+            { label: 'Gợi Ý Khóa Học', action: 'course_recommendations' }
+          ]
+        };
+        setMessages([welcomeMessage]);
+      }
     }
-  }, [user?.name]);
+  }, [user?.name, user?.id]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const endEl = messagesEndRef.current;
+    if (!endEl) return;
+    const viewport = endEl.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (viewport) {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+    } else {
+      endEl.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+    }
   };
 
   useEffect(scrollToBottom, [messages]);
@@ -115,7 +159,7 @@ export default function AIAssistant() {
 
   const generateAIResponse = async (userMessage: string): Promise<ChatMessage> => {
     try {
-      const apiResponse = await fetch('/api/ai/chat', {
+      const apiResponse = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,17 +222,48 @@ export default function AIAssistant() {
     setInputMessage('');
     setIsTyping(true);
 
+    // Save user message to shared history
+    const userHistoryMessage = {
+      role: 'user' as const,
+      content: inputMessage,
+      timestamp: new Date()
+    };
+
     try {
       const aiResponse = await generateAIResponse(inputMessage);
+      const newMessages = [userMessage, aiResponse];
       setMessages(prev => [...prev, aiResponse]);
+      
+      // Save both user and AI messages to shared history
+      const aiHistoryMessage = {
+        role: 'model' as const,
+        content: aiResponse.content,
+        timestamp: new Date()
+      };
+      
+      // Update the shared history with both messages
+      const currentHistory = loadHistory();
+      const updatedHistory = [...currentHistory, userHistoryMessage, aiHistoryMessage];
+      saveHistory(updatedHistory);
+      
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'assistant',
-        content: 'I apologize, but I encountered an error. Please try asking your question again.',
+        content: 'Xin lỗi, tôi đang gặp sự cố kỹ thuật. Vui lòng thử lại câu hỏi của bạn.',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      
+      // Save error message to history too
+      const errorHistoryMessage = {
+        role: 'model' as const,
+        content: errorMessage.content,
+        timestamp: new Date()
+      };
+      const currentHistory = loadHistory();
+      const updatedHistory = [...currentHistory, userHistoryMessage, errorHistoryMessage];
+      saveHistory(updatedHistory);
     } finally {
       setIsTyping(false);
     }
@@ -196,31 +271,50 @@ export default function AIAssistant() {
 
   const handleSuggestedAction = (action: string) => {
     const actionMessages: { [key: string]: string } = {
-      'find_scholarships': 'Find scholarships that match my profile',
-      'improve_eduscore': 'How can I improve my EduScore?',
-      'career_advice': 'Give me career advice',
-      'course_recommendations': 'Recommend courses for me',
-      'take_assessment': 'How do I take the assessment?',
-      'upload_docs': 'Help me upload verification documents',
-      'browse_courses': 'Show me available courses',
-      'continue': 'Tell me more'
+      'find_scholarships': 'Tìm học bổng phù hợp với hồ sơ của tôi',
+      'improve_eduscore': 'Làm thế nào để cải thiện EduScore?',
+      'career_advice': 'Cho tôi lời khuyên về nghề nghiệp',
+      'course_recommendations': 'Gợi ý khóa học cho tôi',
+      'take_assessment': 'Làm thế nào để làm bài đánh giá?',
+      'upload_docs': 'Giúp tôi tải lên tài liệu xác minh',
+      'browse_courses': 'Hiển thị các khóa học có sẵn',
+      'continue': 'Kể cho tôi nghe thêm'
     };
 
     if (actionMessages[action]) {
+      const messageContent = actionMessages[action];
+      
       // Send the message directly instead of setting input
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         type: 'user',
-        content: actionMessages[action],
+        content: messageContent,
         timestamp: new Date()
       };
 
       setMessages(prev => [...prev, userMessage]);
       setIsTyping(true);
 
-      generateAIResponse(actionMessages[action])
+      // Save user message to shared history
+      const userHistoryMessage = {
+        role: 'user' as const,
+        content: messageContent,
+        timestamp: new Date()
+      };
+
+      generateAIResponse(messageContent)
         .then(aiResponse => {
           setMessages(prev => [...prev, aiResponse]);
+          
+          // Save both messages to shared history
+          const aiHistoryMessage = {
+            role: 'model' as const,
+            content: aiResponse.content,
+            timestamp: new Date()
+          };
+          const currentHistory = loadHistory();
+          const updatedHistory = [...currentHistory, userHistoryMessage, aiHistoryMessage];
+          saveHistory(updatedHistory);
         })
         .finally(() => {
           setIsTyping(false);
@@ -234,6 +328,59 @@ export default function AIAssistant() {
       sendMessage();
     }
   };
+
+  const renderAssistantContent = (raw: string) => {
+    const normalized = raw
+      .replace(/\r\n/g, '\n')
+      .replace(/\t/g, ' ')
+      .split('\n')
+      .map(l => l.replace(/\s+/g, ' ').trim())
+      .join('\n')
+      .trim();
+
+    const sections = normalized
+      .split(/\n{2,}/)
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    return (
+      <div className="space-y-3">
+        {sections.map((section, idx) => {
+          const lines = section.split('\n').filter(Boolean);
+          const title = lines[0] || '';
+          const items = lines.slice(1);
+          return (
+            <div key={idx} className="space-y-2">
+              <div className="flex items-start gap-2">
+                <Star className="h-4 w-4 text-blue-500 mt-0.5" />
+                <div className="font-medium text-sm text-blue-900 dark:text-blue-100">{title}</div>
+              </div>
+              {items.length > 0 && (
+                <ul className="ml-6 space-y-1">
+                  {items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm leading-relaxed">
+                      <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 text-blue-500 shrink-0" />
+                      <span className="text-blue-900/90 dark:text-blue-100/90">{item.replace(/^[-•]\s*/, '')}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {items.length === 0 && (
+                <p className="text-sm leading-relaxed text-pretty whitespace-pre-wrap">
+                  {title}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Only show if user is logged in
+  if (!user) {
+    return null;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -303,7 +450,11 @@ export default function AIAssistant() {
                           : "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-blue-200/50 dark:border-blue-800/50"
                       }`}
                     >
-                      <p className="text-sm leading-relaxed text-pretty whitespace-pre-wrap">{message.content}</p>
+                      {message.type === 'assistant' ? (
+                        renderAssistantContent(message.content)
+                      ) : (
+                        <p className="text-sm leading-relaxed text-pretty whitespace-pre-wrap">{message.content}</p>
+                      )}
                       <time
                         className={`text-xs mt-3 block flex items-center gap-1 ${
                           message.type === "user" ? "text-white/80" : "text-blue-600/70 dark:text-blue-400/70"

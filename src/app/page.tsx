@@ -12,7 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-white to-blue-50">
       <Header />
 
       <main className="flex-grow">
@@ -81,8 +81,11 @@ export default function Home() {
         <section id="what-is-hyhan" className="py-16 md:py-24 bg-white mt-0">
           <div className="container mx-auto px-4">
             <div className="responsive-section">
-              <div className="mobile-order-last">
-                <h2 className="responsive-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-8 lg:mb-10 mobile-title-center">Vậy Hyhan là gì?</h2>
+
+              <div className="order-1 md:order-1 w-full">
+                <h2 className="responsive-heading font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-8 lg:mb-10 mobile-title-center text-4xl">
+                  Vậy Hyhan là gì?
+                </h2>
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
@@ -113,7 +116,8 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <div className="mobile-order-first responsive-image-container">
+
+              <div className="order-2 md:order-2 responsive-image-container">
                 <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-6 lg:p-8 shadow-xl w-full max-w-md lg:max-w-none">
                   <div className="text-center">
                     <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-20 h-20 lg:w-24 lg:h-24 rounded-full flex items-center justify-center mx-auto mb-4 lg:mb-6">
@@ -124,6 +128,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </section>
@@ -132,8 +137,8 @@ export default function Home() {
         <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Tầm nhìn - Sứ mệnh - Mục tiêu</h2>
-              <p className="text-lg text-white">Định hướng phát triển và cam kết của Hyhan</p>
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Định hướng phát triển và cam kết của Hyhan</h2>
+              <p className="text-xl md:text-3xl text-white italic">Tầm nhìn - Sứ mệnh - Mục tiêu</p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <VisionCard
@@ -216,7 +221,7 @@ export default function Home() {
                   </p>
                   <div className="flex items-start lg:items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5 lg:mt-0" />
-                    <span className="text-sm lg:text-base text-gray-700">Đánh giá 360 độ về năng lực học thuật và kỹ năng mềm</span>
+                    <span className="text-sm lg:text-base text-gray-700">Đánh giá toàn diện về năng lực học thuật và kỹ năng mềm</span>
                   </div>
                   <div className="flex items-start lg:items-center gap-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5 lg:mt-0" />
@@ -324,14 +329,14 @@ export default function Home() {
         </section>
 
         {/* Final CTA Section */}
-        <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
+        <section className="py-16 md:py-24 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 text-white">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Sẵn sàng khám phá tiềm năng của bạn?</h2>
             <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
               Hành trình đến tương lai tươi sáng bắt đầu từ hôm nay. Tạo EduScore miễn phí và khám phá những cơ hội dành riêng cho bạn.
             </p>
             <Button size="lg" asChild className="bg-white text-blue-600 hover:bg-gray-100 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-              <Link href="/survey">Bắt đầu ngay <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <Link href="/eduscore">Bắt đầu ngay <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
           </div>
         </section>
@@ -369,7 +374,12 @@ function ServiceFeature({ icon, title, description, link }: { icon: React.ReactN
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">{title}</h3>
           <p className="text-gray-600 text-sm leading-relaxed mb-4">{description}</p>
-          <Button variant="outline" size="sm" asChild className="group-hover:bg-blue-50 group-hover:border-blue-200 transition-colors duration-300">
+          <Button
+            variant="outline"
+            size="sm"
+            asChild
+            className="bg-white border-gray-200 transition-colors duration-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-cyan-600 hover:text-white hover:border-transparent"
+          >
             <Link href={link}>Tìm hiểu thêm <ArrowRight className="ml-1 h-4 w-4" /></Link>
           </Button>
         </div>

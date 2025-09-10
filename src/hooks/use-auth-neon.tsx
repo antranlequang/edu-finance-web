@@ -96,12 +96,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = useCallback(async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
+      
+      // Clear user-specific data from localStorage
+      const currentUserId = user?.id;
+      if (currentUserId) {
+        // Clear chat history for this user
+        localStorage.removeItem(`chatHistory_${currentUserId}`);
+        localStorage.removeItem('chatHistory'); // Clear generic chat history too
+        
+        // Clear EduScore data
+        localStorage.removeItem('eduscoreData');
+        localStorage.removeItem('surveyData');
+        localStorage.removeItem('eduscoreResult');
+        
+        // Clear any other user-specific session data
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(`chatHistory_${currentUserId}`) || 
+              key.startsWith('chatSessions') || 
+              key.startsWith('currentSessionId')) {
+            localStorage.removeItem(key);
+          }
+        });
+      }
+      
       setUser(null);
       router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  }, [router]);
+  }, [router, user?.id]);
   
   const value = { user, loading, login, register, logout };
 

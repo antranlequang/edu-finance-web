@@ -60,7 +60,7 @@ export default function JobPage() {
     useEffect(() => {
         const context = getRecommendationContext();
         setEduscoreContext(context);
-    }, [getRecommendationContext]);
+    }, []); // Remove getRecommendationContext from dependencies to prevent infinite loop
 
     const filteredJobs = jobs
         .filter(job => 
@@ -96,12 +96,12 @@ export default function JobPage() {
     return (
         <div className="flex flex-col min-h-screen bg-white">
             <Header />
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <main className="flex-grow container mx-auto px-1 py-1">
                 {/* Main Content */}
                 <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center text-center overflow-hidden ">
                     <div className="flex flex-col items-center">
-                        <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6 animate-fade-in">
-                            TÌM KIẾM VIỆC LÀM
+                        <h1 className="text-6xl md:text-8xl font-bold font-anton tracking-wider leading-normal pt-4 pb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6">
+                        TÌM KIẾM VIỆC LÀM
                         </h1>
                         <p className="text-base md:text-2xl">Nền tảng cung cấp tất cả việc làm phù hợp cho người dùng</p>
                     </div>
@@ -154,15 +154,15 @@ export default function JobPage() {
                 )}
 
                 <section className="bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 text-primary-foreground rounded-lg p-8 md:p-12 mb-8">
-                    <h1 className="text-4xl font-bold mb-3">Tìm kiếm cơ hội việc làm</h1>
-                    <p className="text-lg text-primary-foreground/80 mb-6">Tìm việc làm toàn thời gian, bán thời gian và thực tập tại Việt Nam</p>
+                    <h1 className="text-3xl md:text-4xl font-bold mb-3">Tìm kiếm cơ hội việc làm</h1>
+                    <p className="text-base md:text-lg text-primary-foreground/80 mb-6">Tìm việc làm toàn thời gian, bán thời gian và thực tập tại Việt Nam</p>
                     <div className="bg-background rounded-lg p-4 space-y-4">
                         <div className="flex flex-col md:flex-row gap-3">
                             <div className="relative flex-grow">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                 <Input 
                                     placeholder="Tên công việc, từ khóa, hoặc công ty" 
-                                    className="pl-10 h-12 text-base"
+                                    className="pl-10 h-12 text-base text-gray-900 placeholder:text-gray-800"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
@@ -171,7 +171,7 @@ export default function JobPage() {
                                 <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                                 <Input 
                                     placeholder="Thành phố hoặc tỉnh" 
-                                    className="pl-10 h-12 text-base"
+                                    className="pl-10 h-12 text-base text-gray-900 placeholder:text-gray-800"
                                     value={locationFilter}
                                     onChange={(e) => setLocationFilter(e.target.value)}
                                 />
@@ -179,7 +179,59 @@ export default function JobPage() {
                             <Button size="lg" className="h-12 w-full md:w-auto">Tìm việc</Button>
                         </div>
                         
-                        <div className="flex flex-col sm:flex-row gap-3 text-gray-500">
+                        {/* Quick Filter Buttons */}
+                        <div className="flex flex-wrap gap-3 mb-4">
+                            <Button
+                                size="sm"
+                                onClick={() => setTypeFilter("")}
+                                className={`flex items-center gap-2 border ${
+                                    typeFilter === "" || typeFilter === "all"
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-gray-800 hover:bg-orange-500 hover:text-white"
+                                }`}
+                            >
+                                <Briefcase className="w-4 h-4" />
+                                Tất cả việc làm
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => setTypeFilter("Full-Time")}
+                                className={`flex items-center gap-2 border ${
+                                    typeFilter === "Full-Time"
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-gray-800 hover:bg-orange-500 hover:text-white"
+                                }`}
+                            >
+                                <Clock className="w-4 h-4" />
+                                Toàn thời gian
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => setTypeFilter("Part-Time")}
+                                className={`flex items-center gap-2 border ${
+                                    typeFilter === "Part-Time"
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-gray-800 hover:bg-orange-500 hover:text-white"
+                                }`}
+                            >
+                                <Clock className="w-4 h-4" />
+                                Bán thời gian
+                            </Button>
+                            <Button
+                                size="sm"
+                                onClick={() => setTypeFilter("Internship")}
+                                className={`flex items-center gap-2 border ${
+                                    typeFilter === "Internship"
+                                        ? "bg-blue-600 text-white border-blue-600"
+                                        : "bg-white text-gray-800 hover:bg-orange-500 hover:text-white"
+                                }`}
+                            >
+                                <Clock className="w-4 h-4" />
+                                Thực tập
+                            </Button>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-3 text-gray-800">
                             <Select value={typeFilter} onValueChange={setTypeFilter}>
                                 <SelectTrigger className="w-full sm:w-[200px]">
                                     <SelectValue placeholder="Loại công việc" />
@@ -214,9 +266,9 @@ export default function JobPage() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-4">
                     {filteredJobs.map(job => (
-                        <JobCard key={`${job.title}-${job.company}`} {...job} />
+                        <JobRowCard key={`${job.title}-${job.company}`} {...job} />
                     ))}
                 </div>
             </main>
@@ -225,44 +277,69 @@ export default function JobPage() {
     );
 }
 
-function JobCard({ title, company, location, type, salary, experience, tags }: typeof jobs[0]) {
+function JobRowCard({ title, company, location, type, salary, experience, tags }: typeof jobs[0]) {
+    const getTypeColor = (type: string) => {
+        switch (type) {
+            case "Full-Time": return "bg-green-100 text-green-800 border-green-200";
+            case "Part-Time": return "bg-blue-100 text-blue-800 border-blue-200";
+            case "Internship": return "bg-orange-100 text-orange-800 border-orange-200";
+            default: return "bg-gray-100 text-gray-800 border-gray-200";
+        }
+    };
+
     return (
-        <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
-            <CardHeader>
-                <CardTitle className="text-lg leading-tight">{title}</CardTitle>
-                <CardDescription className="text-primary font-medium">{company}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Briefcase className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate">{type}</span>
+        <Card className="hover:shadow-md transition-shadow duration-300 border-l-4 border-l-blue-500">
+            <CardContent className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                    {/* Job Info Section */}
+                    <div className="flex-grow space-y-2 mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                            <h3 className="text-xl font-semibold text-gray-900 hover:text-blue-600 cursor-pointer">
+                                {title}
+                            </h3>
+                            <Badge className={`w-fit text-xs font-medium ${getTypeColor(type)}`}>
+                                {type === "Full-Time" ? "Toàn thời gian" : 
+                                 type === "Part-Time" ? "Bán thời gian" : "Thực tập"}
+                            </Badge>
+                        </div>
+                        
+                        <p className="text-lg text-blue-600 font-medium">{company}</p>
+                        
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                <span>{location}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <DollarSign className="w-4 h-4" />
+                                <span className="text-green-600 font-medium">{salary}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <Clock className="w-4 h-4" />
+                                <span>{experience}</span>
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-2">
+                            {tags.map(tag => (
+                                <Badge key={tag} variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                                    {tag}
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <MapPin className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate">{location}</span>
+                    
+                    {/* Action Section */}
+                    <div className="flex flex-col gap-2 lg:w-40">
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                            Ứng tuyển
+                        </Button>
+                        <Button variant="outline" className="w-full">
+                            Xem chi tiết
+                        </Button>
                     </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <DollarSign className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate text-green-600 font-medium">{salary}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate">{experience}</span>
-                    </div>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                    {tags.slice(0, 3).map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
-                    ))}
-                    {tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">+{tags.length - 3}</Badge>
-                    )}
                 </div>
             </CardContent>
-            <CardFooter>
-                <Button variant="outline" className="w-full">Xem chi tiết</Button>
-            </CardFooter>
         </Card>
     );
 }

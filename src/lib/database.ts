@@ -34,18 +34,28 @@ export interface EduscoreData {
   reasoning: string;
   surveyData: {
     academicInfoGPA: number;
-    extracurricularActivities: string;
-    awards: string;
+    major: string;
+    majorSpecialization?: string;
+    technicalSkills: string;
+    programmingLanguages?: string;
+    certifications?: string;
+    languageSkills?: string;
+    workExperience?: string;
+    currentYear: string;
+    university: string;
+    extracurricularActivities?: string;
+    awards?: string;
     familyIncome: string;
     dependents: number;
-    valuableAssets: string;
-    medicalExpenses: string;
-    specialCircumstances: string;
-    aspirations: string;
+    valuableAssets?: string;
+    medicalExpenses?: string;
+    specialCircumstances?: string;
+    aspirations?: string;
+    careerGoals?: string;
   };
   documentUrls: {
-    transcript: string;
-    recommendationLetter: string;
+    transcript: string | null;
+    recommendationLetter: string | null;
   };
   createdAt: Date;
   updatedAt: Date;

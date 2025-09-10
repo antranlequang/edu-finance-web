@@ -155,10 +155,30 @@ export const nftAchievements = pgTable('nft_achievements', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Scholarships table
+export const scholarships = pgTable('scholarships', {
+  id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+  amount: integer('amount').notNull(),
+  currency: varchar('currency', { length: 10 }).default('USD'),
+  provider: varchar('provider', { length: 255 }).notNull(),
+  eligibilityCriteria: jsonb('eligibility_criteria').notNull(), // GPA, major, income, etc.
+  applicationDeadline: timestamp('application_deadline'),
+  isActive: boolean('is_active').default(true),
+  totalSlots: integer('total_slots').default(1),
+  occupiedSlots: integer('occupied_slots').default(0),
+  requirements: jsonb('requirements'), // documents, essays, etc.
+  contactInfo: jsonb('contact_info'), // email, phone, website
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 // Scholarship applications
 export const scholarshipApplications = pgTable('scholarship_applications', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   userId: uuid('user_id').references(() => users.id).notNull(),
+  scholarshipId: uuid('scholarship_id').references(() => scholarships.id).notNull(),
   scholarshipName: varchar('scholarship_name', { length: 255 }).notNull(),
   amount: integer('amount').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('pending'),

@@ -244,11 +244,11 @@ export default function ScholarshipPage() {
         <div className="flex flex-col min-h-screen bg-white">
             <Header />
             <main className="flex-grow bg-whité">
-                <div className="container mx-auto px-4 py-16 bg-">
+                <div className="container mx-auto px-1 py-1">
                     {/* Main Content */}
                     <div className="relative h-[30vh] md:h-[40vh] flex items-center justify-center text-center overflow-hidden ">
                         <div className="flex flex-col items-center">
-                            <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6 animate-fade-in">
+                            <h1 className="text-6xl md:text-8xl font-bold font-anton tracking-wider leading-normal pt-4 pb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6">
                                 HỌC BỔNG
                             </h1>
                             <p className="text-base md:text-2xl">Tìm kiếm các học bổng đang có hiện nay</p>

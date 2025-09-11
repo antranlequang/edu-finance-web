@@ -446,15 +446,13 @@ export async function processAIChat(request: ChatRequest): Promise<string> {
     // Get user's EduScore profile if available (server-side safe)
     let eduscoreContext = null;
     try {
-      // Only try to get EduScore context if we're on client side
-      if (typeof window !== 'undefined') {
-        const { EduscoreService } = await import('./eduscore-service');
-        eduscoreContext = EduscoreService.getRecommendationContext();
-      }
+      // Import EduScore service and get context for the user
+      const { EduscoreService } = await import('./eduscore-service');
+      eduscoreContext = EduscoreService.getRecommendationContext(request.userId);
     } catch (eduscoreError) {
-      console.log('📊 EduScore service not available on server side');
+      console.log('📊 EduScore service error:', eduscoreError.message);
     }
-    console.log('📊 EduScore context:', eduscoreContext ? 'found' : 'not found');
+    console.log('📊 EduScore context for', request.userId || 'anonymous', ':', eduscoreContext ? 'found' : 'not found');
     
     // Build comprehensive Vietnamese system instruction with icon support
     let systemInstruction = `### Bạn là Hyhan - người bạn đồng hành AI, chuyên cung cấp thông tin và tư vấn cá nhân hóa cho học sinh, sinh viên về các cơ hội học tập, phát triển sự nghiệp và hỗ trợ tài chính.
@@ -559,10 +557,8 @@ Respond conversationally with detailed, helpful advice. Ask follow-up questions 
     // Try to get EduScore context safely for fallback
     let fallbackEduscoreContext = null;
     try {
-      if (typeof window !== 'undefined') {
-        const { EduscoreService } = await import('./eduscore-service');
-        fallbackEduscoreContext = EduscoreService.getRecommendationContext();
-      }
+      const { EduscoreService } = await import('./eduscore-service');
+      fallbackEduscoreContext = EduscoreService.getRecommendationContext(request.userId);
     } catch (eduscoreError) {
       console.log('📊 EduScore service not available for fallback');
     }

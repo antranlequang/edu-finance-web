@@ -224,68 +224,68 @@ export default function ForumPage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return <div className="flex justify-center items-center h-64">Đang tải...</div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold">Community Forum</h1>
-          <p className="text-muted-foreground">Connect, share, and learn from fellow students and professionals</p>
+          <h1 className="text-3xl font-bold">Diễn Đàn Cộng Đồng</h1>
+          <p className="text-muted-foreground">Kết nối, chia sẻ và học hỏi từ các sinh viên và chuyên gia khác</p>
         </div>
         <Dialog open={isCreatePostOpen} onOpenChange={setIsCreatePostOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Create Post
+              Tạo Bài Viết
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Create New Post</DialogTitle>
-              <DialogDescription>Share your thoughts, ask questions, or start a discussion</DialogDescription>
+              <DialogTitle>Tạo Bài Viết Mới</DialogTitle>
+              <DialogDescription>Chia sẻ suy nghĩ, đặt câu hỏi hoặc bắt đầu thảo luận</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="title">Title</Label>
+                <Label htmlFor="title">Tiêu đề</Label>
                 <Input
                   id="title"
                   value={newPost.title}
                   onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                  placeholder="What's your post about?"
+                  placeholder="Bài viết của bạn về chủ đề gì?"
                 />
               </div>
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">Danh mục</Label>
                 <Select value={newPost.category} onValueChange={(value: any) => setNewPost({ ...newPost, category: value })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="general">General Discussion</SelectItem>
-                    <SelectItem value="jobs">Job Opportunities</SelectItem>
-                    <SelectItem value="scholarships">Scholarships & Funding</SelectItem>
-                    <SelectItem value="networking">Networking & Career</SelectItem>
+                    <SelectItem value="general">Thảo luận chung</SelectItem>
+                    <SelectItem value="jobs">Cơ hội việc làm</SelectItem>
+                    <SelectItem value="scholarships">Học bổng & Tài trợ</SelectItem>
+                    <SelectItem value="networking">Kết nối & Nghề nghiệp</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label htmlFor="content">Content</Label>
+                <Label htmlFor="content">Nội dung</Label>
                 <Textarea
                   id="content"
                   value={newPost.content}
                   onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                  placeholder="Write your post content here..."
+                  placeholder="Viết nội dung bài viết tại đây..."
                   rows={6}
                 />
               </div>
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsCreatePostOpen(false)}>
-                  Cancel
+                  Hủy
                 </Button>
                 <Button onClick={handleCreatePost} disabled={!newPost.title || !newPost.content}>
-                  Create Post
+                  Tạo Bài Viết
                 </Button>
               </div>
             </div>
@@ -299,7 +299,7 @@ export default function ForumPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search posts..."
+                placeholder="Tìm kiếm bài viết..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -310,20 +310,20 @@ export default function ForumPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Newest</SelectItem>
-                <SelectItem value="popular">Most Liked</SelectItem>
-                <SelectItem value="trending">Most Viewed</SelectItem>
+                <SelectItem value="newest">Mới nhất</SelectItem>
+                <SelectItem value="popular">Nhiều lượt thích</SelectItem>
+                <SelectItem value="trending">Nhiều lượt xem</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mb-6">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="jobs">Jobs</TabsTrigger>
-              <TabsTrigger value="scholarships">Scholarships</TabsTrigger>
-              <TabsTrigger value="networking">Networking</TabsTrigger>
-              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="all">Tất cả</TabsTrigger>
+              <TabsTrigger value="jobs">Việc làm</TabsTrigger>
+              <TabsTrigger value="scholarships">Học bổng</TabsTrigger>
+              <TabsTrigger value="networking">Kết nối</TabsTrigger>
+              <TabsTrigger value="general">Chung</TabsTrigger>
             </TabsList>
           </Tabs>
 
@@ -385,7 +385,7 @@ export default function ForumPage() {
                     </div>
                   </div>
                   <Button variant="ghost" size="sm">
-                    View Discussion
+                    Xem Thảo Luận
                   </Button>
                 </CardFooter>
               </Card>
@@ -396,7 +396,7 @@ export default function ForumPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Trending Topics</CardTitle>
+              <CardTitle className="text-lg">Chủ Đề Thịnh Hành</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -412,7 +412,7 @@ export default function ForumPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Top Contributors</CardTitle>
+              <CardTitle className="text-lg">Người Đóng Góp Hàng Đầu</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -432,7 +432,7 @@ export default function ForumPage() {
                       </div>
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {contributor.posts} posts
+                      {contributor.posts} bài viết
                     </Badge>
                   </div>
                 ))}
@@ -442,21 +442,21 @@ export default function ForumPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Forum Stats</CardTitle>
+              <CardTitle className="text-lg">Thống Kê Diễn Đàn</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span>Total Posts</span>
+                  <span>Tổng Bài Viết</span>
                   <span className="font-medium">1,234</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Active Users</span>
+                  <span>Người Dùng Hoạt Động</span>
                   <span className="font-medium">567</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>This Week</span>
-                  <span className="font-medium">+89 posts</span>
+                  <span>Tuần Này</span>
+                  <span className="font-medium">+89 bài viết</span>
                 </div>
               </div>
             </CardContent>

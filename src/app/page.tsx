@@ -319,8 +319,8 @@ export default function Home() {
         <section className="py-16 md:py-24 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Những câu hỏi thường gặp</h2>
-              <p className="text-lg text-gray-600">Giải đáp những thắc mắc phổ biến về nền tảng Hyhan</p>
+              <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2 md:md-4">Những câu hỏi thường gặp</h2>
+              <p className="text-base md:text-lg text-gray-600">Giải đáp những thắc mắc phổ biến về Hyhan</p>
             </div>
             <div className="max-w-3xl mx-auto">
               <FAQSection />

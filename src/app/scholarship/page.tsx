@@ -169,7 +169,7 @@ export default function ScholarshipPage() {
     }, [user, loading, router]);
     
     useEffect(() => {
-        const context = getRecommendationContext();
+        const context = getRecommendationContext(user?.email);
         if (context) {
             setEduscore(context.eduscore);
             setUserMajor(context.major);
@@ -191,7 +191,7 @@ export default function ScholarshipPage() {
             }
         }
         setIsScoreLoading(false);
-    }, [getRecommendationContext]);
+    }, [user?.email]);
 
     if (loading || isScoreLoading) {
         return (

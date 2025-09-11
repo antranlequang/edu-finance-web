@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Search, Star, AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useEduscore } from "@/lib/eduscore-service";
+import { useAuth } from "@/hooks/use-auth-neon";
 
 // Vietnamese bank loan packages data
 const loanPackages = [
@@ -130,6 +131,7 @@ const loanPackages = [
 ];
 
 export default function FinancePage() {
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState("");
     const [bankFilter, setBankFilter] = useState("");
     const [maxAmountFilter, setMaxAmountFilter] = useState("");
@@ -141,10 +143,10 @@ export default function FinancePage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const context = getRecommendationContext();
+        const context = getRecommendationContext(user?.email);
         setEduscoreContext(context);
         setIsLoading(false);
-    }, []);
+    }, [user?.email]);
 
     const filteredPackages = loanPackages
         .filter(pkg => 

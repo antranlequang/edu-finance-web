@@ -53,7 +53,11 @@ const steps = [
   { id: 6, title: 'Nguyện vọng', fields: ['aspirations', 'careerGoals'] },
 ];
 
-export default function SurveyWizard() {
+interface SurveyWizardProps {
+  onComplete?: () => void;
+}
+
+export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<EvaluateEduscoreSurveyOutput | null>(null);
@@ -198,7 +202,7 @@ export default function SurveyWizard() {
 
   const onSubmit = async (data: SurveyFormValues) => {
     if (!user) {
-      toast({ variant: 'destructive', title: "Error", description: "You must be logged in to submit the survey." });
+      toast({ variant: 'destructive', title: "Lỗi", description: "Bạn phải đăng nhập để gửi khảo sát." });
       return;
     }
     
@@ -247,6 +251,11 @@ export default function SurveyWizard() {
 
       setResult(surveyResult);
       toast({ title: "Đánh giá hoàn tất!", description: "Đánh giá Eduscore đã được tính toán xong và lưu trên hệ thống." });
+      
+      // Call onComplete callback after successful completion
+      if (onComplete) {
+        setTimeout(() => onComplete(), 2000); // Delay to let user see the result
+      }
     } catch (error) {
       console.error(error);
       toast({ variant: 'destructive', title: "Đã xảy ra lỗi", description: "Không thể đánh giá khảo sát. Vui lòng thử lại." });

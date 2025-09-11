@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processAIChat } from '@/lib/ai-service';
+import { validateSession } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,10 +16,23 @@ export async function POST(request: NextRequest) {
     console.log('📨 Chat API received message:', message.substring(0, 100) + '...');
     console.log('📚 History length:', history?.length || 0);
 
+    // Get user from session token (optional, AI works without auth too)
+    let user = null;
+    const authToken = request.cookies.get('auth-token')?.value;
+    if (authToken) {
+      try {
+        user = await validateSession(authToken);
+        console.log('👤 User authenticated:', user?.email || 'none');
+      } catch (error) {
+        console.log('⚠️ Invalid session token, proceeding without auth');
+      }
+    }
+
     // Process the AI chat with provided history using server-side AI service
     const response = await processAIChat({
       history: history || [],
       prompt: message,
+      userId: user?.email
     });
 
     console.log('✅ AI response generated, length:', response.length);

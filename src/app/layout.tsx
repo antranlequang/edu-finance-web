@@ -6,8 +6,8 @@ import { AuthProvider } from '@/hooks/use-auth-neon';
 import AIAssistant from '@/components/ai/AIAssistant';
 
 export const metadata: Metadata = {
-  title: 'HYHAN - Blockchain Education & Scholarship Platform',
-  description: 'Advanced blockchain-powered education platform with AI-driven scholarship matching, comprehensive user verification system, and decentralized credentials.',
+  title: 'HYHAN - Nền Tảng Giáo Dục & Học Bổng Blockchain',
+  description: 'Nền tảng giáo dục blockchain tiên tiến với hệ thống gợi ý học bổng AI, xác thực người dùng toàn diện và chứng chỉ phi tập trung.',
 };
 
 export default function RootLayout({

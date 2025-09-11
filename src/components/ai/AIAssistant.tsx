@@ -17,6 +17,7 @@ import {
   FileText, ExternalLink, Star, ThumbsUp, ThumbsDown, Clock, Zap, CheckCircle2
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { FormattedText } from '@/components/ui/formatted-text';
 
 interface ChatMessage {
   id: string;
@@ -81,7 +82,7 @@ export default function AIAssistant() {
         setMessages(convertedMessages);
       } else {
         // Create personalized welcome message
-        const eduscoreContext = getRecommendationContext();
+        const eduscoreContext = getRecommendationContext(user?.email);
         let welcomeContent = `Xin chào ${user?.name || 'bạn'}! 👋 Tôi là trợ lý AI của HYHAN về giáo dục và học bổng.\n\n`;
         
         if (eduscoreContext?.eduscore) {
@@ -366,9 +367,9 @@ export default function AIAssistant() {
                 </ul>
               )}
               {items.length === 0 && (
-                <p className="text-sm leading-relaxed text-pretty whitespace-pre-wrap">
-                  {title}
-                </p>
+                <div className="text-sm leading-relaxed text-pretty">
+                  <FormattedText text={title} />
+                </div>
               )}
             </div>
           );
@@ -453,7 +454,9 @@ export default function AIAssistant() {
                       {message.type === 'assistant' ? (
                         renderAssistantContent(message.content)
                       ) : (
-                        <p className="text-sm leading-relaxed text-pretty whitespace-pre-wrap">{message.content}</p>
+                        <div className="text-sm leading-relaxed text-pretty">
+                          <FormattedText text={message.content} />
+                        </div>
                       )}
                       <time
                         className={`text-xs mt-3 block flex items-center gap-1 ${

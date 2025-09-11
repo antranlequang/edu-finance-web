@@ -123,7 +123,7 @@ export default function AIAdvicePage() {
     const newSessionId = Date.now().toString();
     setCurrentSessionId(newSessionId);
     
-    const eduscoreContext = getRecommendationContext();
+    const eduscoreContext = getRecommendationContext(user?.email);
     const welcomeMessage = eduscoreContext 
       ? `Xin chào! Tôi là trợ lý AI của HYHAN. Tôi thấy bạn có EduScore ${eduscoreContext.eduscore}/100 và đang học ${eduscoreContext.major}. Tôi có thể giúp bạn tìm học bổng, khóa học và cơ hội việc làm phù hợp. Bạn muốn hỏi gì?`
       : `Xin chào! Tôi là trợ lý AI giáo dục của HYHAN. Tôi có thể giúp bạn về học bổng, khóa học, và cơ hội nghề nghiệp tại Việt Nam. Hãy hoàn thành EduScore để nhận được tư vấn cá nhân hóa nhé!`;
@@ -399,11 +399,11 @@ export default function AIAdvicePage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1 sm:gap-2">
                 <h1 className="font-bold text-base sm:text-lg md:text-xl bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent whitespace-nowrap truncate">
-                  HYHAN AI Education Assistant
+                  HYHAN AI Assistant
                 </h1>
                 <div className="flex items-center gap-1 text-xs sm:text-sm flex-shrink-0">
                   <Zap className="h-3 w-3 text-blue-500" />
-                  <span className="text-blue-600 dark:text-blue-400 font-medium whitespace-nowrap hidden xs:inline">Powered by Advanced AI</span>
+                  <span className="text-blue-600 dark:text-blue-400 font-medium whitespace-nowrap xs:inline">Powered by Advanced AI</span>
                   <span className="text-blue-600 dark:text-blue-400 font-medium whitespace-nowrap xs:hidden">AI</span>
                 </div>
               </div>
@@ -433,6 +433,7 @@ export default function AIAdvicePage() {
       </header>
 
       <main className="flex h-[calc(100vh-160px)] relative">
+        
         {/* Chat History Sidebar */}
         <div className={`${showHistory ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm border-r border-blue-200/50 dark:border-blue-800/50`}>
           {showHistory && (
@@ -527,7 +528,7 @@ export default function AIAdvicePage() {
                       : "bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-blue-200/50 dark:border-blue-800/50"
                   }`}
                 >
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap [&>p]:mb-1 [&>p]:mt-0 [&>ul]:mb-1 [&>ol]:mb-1">
+                  <div className="text-sm leading-relaxed [&>p]:mb-1 [&>p]:mt-0 [&>ul]:mb-1 [&>ol]:mb-1">
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   </div>
                   <time

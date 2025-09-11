@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { ArrowRight, TrendingUp, TrendingDown, Target, Briefcase, User, Calendar, GraduationCap, Building, DollarSign, Award, Languages, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { analyzeJobRequirements, JobRequirementAnalysis } from '@/lib/job-analysis-service';
 import { matchScholarships, ScholarshipMatchingResult, UserProfile } from '@/lib/scholarship-matching-service';
+import { FormattedText } from '@/components/ui/formatted-text';
 
 interface SurveyResultProps {
   result: EvaluateEduscoreSurveyOutput;
@@ -102,7 +103,7 @@ export default function SurveyResult({ result }: SurveyResultProps) {
   }, [eduscore, reasoning]);
 
   // Helper function to safely display data with fallback
-  const safeDisplay = (data: string | undefined, fallback = "No data to analyze") => {
+  const safeDisplay = (data: string | undefined, fallback = "Không có dữ liệu phân tích") => {
     return (!data || data.trim() === '' || data.toLowerCase() === 'none') ? fallback : data;
   };
 
@@ -138,7 +139,7 @@ export default function SurveyResult({ result }: SurveyResultProps) {
                 <User className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Tên</p>
-                  <p className="font-medium">{safeDisplay(userProfile.name, "Student")}</p>
+                  <p className="font-medium">{safeDisplay(userProfile.name, "Sinh viên")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -152,7 +153,7 @@ export default function SurveyResult({ result }: SurveyResultProps) {
                 <Briefcase className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Nghề nghiệp</p>
-                  <p className="font-medium">{safeDisplay(userProfile.occupation, "Student")}</p>
+                  <p className="font-medium">{safeDisplay(userProfile.occupation, "Sinh viên")}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -232,7 +233,9 @@ export default function SurveyResult({ result }: SurveyResultProps) {
             </div>
             <div>
               <h3 className="font-semibold text-xl mb-2 text-primary">Đánh giá dựa trên AI</h3>
-              <p className="text-muted-foreground italic text-justify">"{reasoning}"</p>
+              <div className="text-muted-foreground italic text-justify">
+                "<FormattedText text={reasoning} />"
+              </div>
             </div>
           </div>
         </CardContent>

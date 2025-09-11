@@ -24,8 +24,8 @@ export default function DocumentUpload() {
       if (file.size > maxSize) {
         toast({
           variant: 'destructive',
-          title: 'File too large',
-          description: 'Please select a file smaller than 5MB.'
+          title: 'Tập tin quá lớn',
+          description: 'Vui lòng chọn tập tin nhỏ hơn 5MB.'
         });
         return;
       }
@@ -37,8 +37,8 @@ export default function DocumentUpload() {
     if (!user || !selectedFile || !documentType) {
       toast({
         variant: 'destructive',
-        title: 'Missing information',
-        description: 'Please select a file and document type.'
+        title: 'Thiếu thông tin',
+        description: 'Vui lòng chọn tập tin và loại tài liệu.'
       });
       return;
     }
@@ -60,8 +60,8 @@ export default function DocumentUpload() {
       }
       
       toast({
-        title: 'Document uploaded successfully',
-        description: 'Your document is now pending verification.'
+        title: 'Tải tài liệu thành công',
+        description: 'Tài liệu của bạn đang chờ xác thực.'
       });
       
       setSelectedFile(null);
@@ -75,8 +75,8 @@ export default function DocumentUpload() {
       console.error('Upload error:', error);
       toast({
         variant: 'destructive',
-        title: 'Upload failed',
-        description: error.message || 'Failed to upload document. Please try again.'
+        title: 'Tải lên thất bại',
+        description: error.message || 'Không thể tải tài liệu. Vui lòng thử lại.'
       });
     } finally {
       setIsUploading(false);
@@ -88,30 +88,30 @@ export default function DocumentUpload() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileCheck className="h-5 w-5" />
-          Document Verification
+          Xác Thực Tài Liệu
         </CardTitle>
         <CardDescription>
-          Upload documents to verify your academic achievements and increase your account level.
+          Tải lên tài liệu để xác thực thành tích học tập và nâng cao cấp tài khoản.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="document-type">Document Type</Label>
+          <Label htmlFor="document-type">Loại Tài Liệu</Label>
           <Select value={documentType} onValueChange={setDocumentType}>
             <SelectTrigger>
-              <SelectValue placeholder="Select document type" />
+              <SelectValue placeholder="Chọn loại tài liệu" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="transcript">Academic Transcript</SelectItem>
-              <SelectItem value="certificate">Certificate/Diploma</SelectItem>
-              <SelectItem value="recommendation">Recommendation Letter</SelectItem>
-              <SelectItem value="score_report">Test Score Report</SelectItem>
+              <SelectItem value="transcript">Bảng điểm học tập</SelectItem>
+              <SelectItem value="certificate">Chứng chỉ/Bằng cấp</SelectItem>
+              <SelectItem value="recommendation">Thư giới thiệu</SelectItem>
+              <SelectItem value="score_report">Bảng điểm thi</SelectItem>
             </SelectContent>
           </Select>
         </div>
         
         <div>
-          <Label htmlFor="document-file">Upload Document</Label>
+          <Label htmlFor="document-file">Tải Tài Liệu</Label>
           <Input
             id="document-file"
             type="file"
@@ -120,13 +120,13 @@ export default function DocumentUpload() {
             className="cursor-pointer"
           />
           <p className="text-xs text-muted-foreground mt-1">
-            Accepted formats: PDF, JPG, PNG. Max size: 5MB
+Định dạng chấp nhận: PDF, JPG, PNG. Kích thước tối đa: 5MB
           </p>
         </div>
 
         {selectedFile && (
           <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium">Selected file:</p>
+            <p className="text-sm font-medium">Tập tin đã chọn:</p>
             <p className="text-sm text-muted-foreground">{selectedFile.name}</p>
             <p className="text-xs text-muted-foreground">
               {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
@@ -142,12 +142,12 @@ export default function DocumentUpload() {
           {isUploading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
+Đang tải lên...
             </>
           ) : (
             <>
               <Upload className="mr-2 h-4 w-4" />
-              Upload Document
+Tải Tài Liệu
             </>
           )}
         </Button>

@@ -215,9 +215,9 @@ export default function ProfileDashboard() {
                 </div>
               )}
               <div className="flex flex-col gap-2 mt-4">
-                <Button variant="outline" className="w-full">Edit Profile</Button>
+                <Button variant="outline" className="w-full">Chỉnh Sửa Hồ Sơ</Button>
                 <Button variant="outline" asChild className="w-full">
-                  <Link href="/verification">Document Verification</Link>
+                  <Link href="/verification">Xác Thực Tài Liệu</Link>
                 </Button>
               </div>
             </CardContent>

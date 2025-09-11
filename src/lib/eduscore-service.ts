@@ -1,5 +1,7 @@
 'use client';
 
+import { getSampleEduscoreData, hasSampleEduscoreData } from './sample-eduscore-data';
+
 export interface EduscoreData {
   score: number;
   reasoning: string;
@@ -39,12 +41,37 @@ export class EduscoreService {
         completedAt: data.completedAt.toISOString()
       }));
     } catch (error) {
-      console.error('Failed to save EduScore data:', error);
+      console.error('Lưu dữ liệu EduScore không thành công!:', error);
     }
   }
 
-  static getEduscoreData(): EduscoreData | null {
+  static getEduscoreData(userEmail?: string): EduscoreData | null {
     try {
+      // Check for sample data first if userEmail is provided
+      if (userEmail && hasSampleEduscoreData(userEmail)) {
+        const sampleData = getSampleEduscoreData(userEmail);
+        if (sampleData) {
+          return {
+            score: sampleData.score,
+            reasoning: sampleData.reasoning,
+            surveyData: {
+              ...sampleData.surveyData,
+              certifications: sampleData.surveyData.certifications || '',
+              languageSkills: sampleData.surveyData.languageSkills || '',
+              workExperience: sampleData.surveyData.workExperience || '',
+              extracurricularActivities: sampleData.surveyData.extracurricularActivities || '',
+              awards: sampleData.surveyData.awards || '',
+              valuableAssets: sampleData.surveyData.valuableAssets || '',
+              medicalExpenses: sampleData.surveyData.medicalExpenses || '',
+              specialCircumstances: sampleData.surveyData.specialCircumstances || '',
+              aspirations: sampleData.surveyData.aspirations || '',
+              careerGoals: sampleData.surveyData.careerGoals || ''
+            },
+            completedAt: sampleData.createdAt
+          };
+        }
+      }
+      
       const data = localStorage.getItem(this.STORAGE_KEY);
       if (!data) return null;
       
@@ -59,9 +86,14 @@ export class EduscoreService {
     }
   }
 
-  static hasValidEduscore(): boolean {
-    const data = this.getEduscoreData();
+  static hasValidEduscore(userEmail?: string): boolean {
+    const data = this.getEduscoreData(userEmail);
     if (!data) return false;
+    
+    // Sample data is always considered valid
+    if (userEmail && hasSampleEduscoreData(userEmail)) {
+      return true;
+    }
     
     // Check if data is not older than 6 months
     const sixMonthsAgo = new Date();
@@ -70,9 +102,9 @@ export class EduscoreService {
     return data.completedAt > sixMonthsAgo;
   }
 
-  static getEduscoreForRecommendations(): { score: number; major: string; familyIncome: string } | null {
-    const data = this.getEduscoreData();
-    if (!data || !this.hasValidEduscore()) return null;
+  static getEduscoreForRecommendations(userEmail?: string): { score: number; major: string; familyIncome: string } | null {
+    const data = this.getEduscoreData(userEmail);
+    if (!data || !this.hasValidEduscore(userEmail)) return null;
     
     return {
       score: data.score,
@@ -118,15 +150,15 @@ export class EduscoreService {
     return null;
   }
 
-  static getRecommendationContext(): RecommendationContext | null {
-    let data = this.getEduscoreData();
+  static getRecommendationContext(userEmail?: string): RecommendationContext | null {
+    let data = this.getEduscoreData(userEmail);
     
-    // Try to migrate legacy data if no new data exists
-    if (!data) {
+    // Try to migrate legacy data if no new data exists (but not for demo accounts)
+    if (!data && (!userEmail || !hasSampleEduscoreData(userEmail))) {
       data = this.migrateLegacyData();
     }
     
-    if (!data || !this.hasValidEduscore()) return null;
+    if (!data || !this.hasValidEduscore(userEmail)) return null;
     
     return {
       eduscore: data.score,
@@ -134,9 +166,9 @@ export class EduscoreService {
       currentYear: data.surveyData.currentYear,
       familyIncome: data.surveyData.familyIncome,
       technicalSkills: data.surveyData.technicalSkills.split(',').map(s => s.trim()),
-      languageSkills: data.surveyData.languageSkills,
-      workExperience: data.surveyData.workExperience,
-      careerGoals: data.surveyData.careerGoals
+      languageSkills: data.surveyData.languageSkills || '',
+      workExperience: data.surveyData.workExperience || '',
+      careerGoals: data.surveyData.careerGoals || ''
     };
   }
 }
@@ -154,9 +186,9 @@ export interface RecommendationContext {
 
 // Hook for React components
 export function useEduscore() {
-  const getEduscoreData = () => EduscoreService.getEduscoreData();
-  const hasValidEduscore = () => EduscoreService.hasValidEduscore();
-  const getRecommendationContext = () => EduscoreService.getRecommendationContext();
+  const getEduscoreData = (userEmail?: string) => EduscoreService.getEduscoreData(userEmail);
+  const hasValidEduscore = (userEmail?: string) => EduscoreService.hasValidEduscore(userEmail);
+  const getRecommendationContext = (userEmail?: string) => EduscoreService.getRecommendationContext(userEmail);
   
   return {
     getEduscoreData,

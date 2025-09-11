@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, MapPin, Briefcase, Clock, DollarSign, CheckCircle, AlertCircle, TrendingUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useEduscore } from "@/lib/eduscore-service";
+import { useAuth } from "@/hooks/use-auth-neon";
 
 const jobs = [
     // Tech Jobs
@@ -49,6 +50,7 @@ const jobs = [
 ];
 
 export default function JobPage() {
+    const { user } = useAuth();
     const [searchTerm, setSearchTerm] = useState("");
     const [locationFilter, setLocationFilter] = useState("");
     const [typeFilter, setTypeFilter] = useState("");
@@ -58,9 +60,9 @@ export default function JobPage() {
     const { getRecommendationContext } = useEduscore();
 
     useEffect(() => {
-        const context = getRecommendationContext();
+        const context = getRecommendationContext(user?.email);
         setEduscoreContext(context);
-    }, []); // Remove getRecommendationContext from dependencies to prevent infinite loop
+    }, [user?.email]);
 
     const filteredJobs = jobs
         .filter(job => 

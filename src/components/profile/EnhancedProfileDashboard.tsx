@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from 'recharts';
 import { getAccountLevelName } from '@/lib/utils';
 import type { EduscoreData, VerificationDocument } from '@/lib/database-operations';
+import { FormattedText } from '@/components/ui/formatted-text';
 
 interface UserSkill {
   id: string;
@@ -140,9 +141,9 @@ export default function EnhancedProfileDashboard() {
     profileCompleteness: 75,
     accountLevel: 3,
     nextLevelRequirements: [
-      'Verify at least 1 more education credential',
-      'Add 2 more verified skills',
-      'Complete blockchain wallet verification'
+      'Xác thực ít nhất 1 bằng cấp giáo dục',
+      'Thêm 2 kỹ năng đã xác thực',
+      'Hoàn thành xác thực ví blockchain'
     ]
   };
 
@@ -192,11 +193,11 @@ export default function EnhancedProfileDashboard() {
               profileCompleteness: 10, // Base completeness for having an account
               accountLevel: user.accountLevel || 1,
               nextLevelRequirements: [
-                'Complete your profile information',
-                'Add at least 3 skills',
-                'Add education history',
-                'Add work experience',
-                'Complete EduScore assessment'
+                'Hoàn thiện thông tin hồ sơ',
+                'Thêm ít nhất 3 kỹ năng',
+                'Thêm lịch sử giáo dục',
+                'Thêm kinh nghiệm làm việc',
+                'Hoàn thành đánh giá EduScore'
               ]
             });
           }
@@ -244,23 +245,23 @@ export default function EnhancedProfileDashboard() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Target className="h-5 w-5" />
-          Profile Completeness
+Mức Độ Hoàn Thiện Hồ Sơ
         </CardTitle>
         <CardDescription>
-          Complete your profile to unlock more opportunities
+Hoàn thiện hồ sơ để mở khóa thêm cơ hội
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="font-medium">{profileStats?.profileCompleteness}% Complete</span>
+            <span className="font-medium">{profileStats?.profileCompleteness}% Hoàn thành</span>
             <Badge variant={profileStats && profileStats.profileCompleteness > 80 ? 'default' : 'secondary'}>
               Level {profileStats?.accountLevel}
             </Badge>
           </div>
           <Progress value={profileStats?.profileCompleteness} className="h-3" />
           <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Next Level Requirements:</h4>
+            <h4 className="text-sm font-semibold">Yêu cầu cấp tiếp theo:</h4>
             {profileStats?.nextLevelRequirements.map((req, index) => (
               <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
                 <AlertCircle className="h-4 w-4" />
@@ -277,9 +278,9 @@ export default function EnhancedProfileDashboard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back, {user.name || user.email}!</h1>
+          <h1 className="text-3xl font-bold">Xin chào bạn {user.name || user.email}!</h1>
           <p className="text-muted-foreground">
-            Your comprehensive profile dashboard with verification system
+Bảng điều khiển hồ sơ toàn diện với hệ thống xác thực
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -288,7 +289,7 @@ export default function EnhancedProfileDashboard() {
           </Badge>
           <Button variant="outline" size="sm">
             <MessageSquare className="h-4 w-4 mr-2" />
-            AI Assistant
+Trợ lý AI
           </Button>
         </div>
       </div>
@@ -298,7 +299,7 @@ export default function EnhancedProfileDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Verified Skills</p>
+                <p className="text-sm font-medium text-muted-foreground">Kỹ năng đã xác thực</p>
                 <p className="text-2xl font-bold">{profileStats?.verifiedSkills}/{profileStats?.totalSkills}</p>
               </div>
               <Star className="h-8 w-8 text-yellow-500" />
@@ -310,7 +311,7 @@ export default function EnhancedProfileDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Education</p>
+                <p className="text-sm font-medium text-muted-foreground">Giáo dục</p>
                 <p className="text-2xl font-bold">{profileStats?.verifiedEducation}/{profileStats?.totalEducation}</p>
               </div>
               <GraduationCap className="h-8 w-8 text-blue-500" />
@@ -322,7 +323,7 @@ export default function EnhancedProfileDashboard() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Experience</p>
+                <p className="text-sm font-medium text-muted-foreground">Kinh nghiệm</p>
                 <p className="text-2xl font-bold">{profileStats?.verifiedExperience}/{profileStats?.totalExperience}</p>
               </div>
               <Briefcase className="h-8 w-8 text-green-500" />
@@ -347,10 +348,10 @@ export default function EnhancedProfileDashboard() {
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="skills">Skills</TabsTrigger>
-              <TabsTrigger value="education">Education</TabsTrigger>
-              <TabsTrigger value="experience">Experience</TabsTrigger>
+              <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+              <TabsTrigger value="skills">Kỹ năng</TabsTrigger>
+              <TabsTrigger value="education">Giáo dục</TabsTrigger>
+              <TabsTrigger value="experience">Kinh nghiệm</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -359,13 +360,13 @@ export default function EnhancedProfileDashboard() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <LayoutDashboard />
-                      Admin Access
+                      Quyền Quản trị
                     </CardTitle>
-                    <CardDescription>You have administrative privileges.</CardDescription>
+                    <CardDescription>Bạn có quyền quản trị.</CardDescription>
                   </CardHeader>
                   <CardFooter>
                     <Button asChild>
-                      <Link href="/admin">Go to Admin Dashboard</Link>
+                      <Link href="/admin">Chuyển đến Bảng Điều Khiển Admin</Link>
                     </Button>
                   </CardFooter>
                 </Card>
@@ -375,17 +376,17 @@ export default function EnhancedProfileDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Award />
-                    Your EduScore
+EduScore của bạn
                   </CardTitle>
                   {!eduscoreResult && (
                     <CardDescription>
-                      Complete the survey to unlock AI-powered scholarship matching
+Hoàn thành khảo sát để mở khóa hệ thống gợi ý học bổng AI
                     </CardDescription>
                   )}
                 </CardHeader>
                 {eduscoreResult ? (
                   <>
-                    <CardContent className="grid md:grid-cols-2 gap-8 items-center">
+                    <CardContent className="grid md:grid-cols-1 gap-8 items-center">
                       <div className="h-48">
                         <ResponsiveContainer width="100%" height="100%">
                           <RadialBarChart innerRadius="70%" outerRadius="100%" data={chartData} startAngle={90} endAngle={-270}>
@@ -401,23 +402,25 @@ export default function EnhancedProfileDashboard() {
                         </ResponsiveContainer>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-lg mb-2 text-primary">AI Evaluation Summary</h3>
-                        <p className="text-sm text-muted-foreground italic">"{eduscoreResult.reasoning}"</p>
+                        <h3 className="font-semibold text-lg mb-2 text-primary">Tóm tắt Đánh giá AI</h3>
+                        <div className="text-sm text-muted-foreground italic text-justify">
+                          "<FormattedText text={eduscoreResult.reasoning} />"
+                        </div>
                       </div>
                     </CardContent>
                     <CardFooter className='flex-col items-start gap-4'>
                       <Button asChild>
                         <Link href="/scholarship">
-                          View Matching Scholarships <ArrowRight className="ml-2 h-4 w-4" />
+                          Xem học bổng phù hợp với bạn <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
                     </CardFooter>
                   </>
                 ) : (
                   <CardContent className="flex flex-col items-center justify-center text-center p-12">
-                    <p className="text-muted-foreground mb-4">Complete the EduScore survey to unlock opportunities</p>
+                    <p className="text-muted-foreground mb-4">Hoàn thành khảo sát EduScore để mở khóa cơ hội</p>
                     <Button asChild>
-                      <Link href="/survey">Take the Survey</Link>
+                      <Link href="/survey">Làm Khảo Sát</Link>
                     </Button>
                   </CardContent>
                 )}
@@ -428,12 +431,12 @@ export default function EnhancedProfileDashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Skills & Certifications</CardTitle>
-                    <CardDescription>Showcase your verified skills and certifications</CardDescription>
+                    <CardTitle>Kỹ năng & Chứng chỉ</CardTitle>
+                    <CardDescription>Thể hiện kỹ năng và chứng chỉ đã xác thực</CardDescription>
                   </div>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Skill
+Thêm Kỹ Năng
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -451,12 +454,12 @@ export default function EnhancedProfileDashboard() {
                           {skill.verified ? (
                             <Badge variant="default" className="bg-green-100 text-green-800">
                               <CheckCircle className="h-3 w-3 mr-1" />
-                              Verified
+                              Đã xác thực
                             </Badge>
                           ) : (
                             <Badge variant="secondary">
                               <AlertCircle className="h-3 w-3 mr-1" />
-                              Unverified
+                              Chưa xác thực
                             </Badge>
                           )}
                           <Button variant="ghost" size="sm">
@@ -474,12 +477,12 @@ export default function EnhancedProfileDashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Education History</CardTitle>
-                    <CardDescription>Track your educational achievements</CardDescription>
+                    <CardTitle>Lịch sử Giáo dục</CardTitle>
+                    <CardDescription>Theo dõi thành tích giáo dục của bạn</CardDescription>
                   </div>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Education
+Thêm Giáo Dục
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -492,7 +495,7 @@ export default function EnhancedProfileDashboard() {
                             <p className="text-muted-foreground">{edu.institution}</p>
                             <p className="text-sm text-muted-foreground">{edu.fieldOfStudy}</p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {edu.startDate} - {edu.endDate || 'Present'}
+                              {edu.startDate} - {edu.endDate || 'Hiện tại'}
                             </p>
                             {edu.gpa && (
                               <p className="text-sm font-medium mt-2">GPA: {edu.gpa}</p>
@@ -502,12 +505,12 @@ export default function EnhancedProfileDashboard() {
                             {edu.verified ? (
                               <Badge variant="default" className="bg-green-100 text-green-800">
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                Verified
+                                Đã xác thực
                               </Badge>
                             ) : (
                               <Badge variant="secondary">
                                 <AlertCircle className="h-3 w-3 mr-1" />
-                                Unverified
+                                Chưa xác thực
                               </Badge>
                             )}
                             <Button variant="ghost" size="sm">
@@ -526,12 +529,12 @@ export default function EnhancedProfileDashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle>Work Experience</CardTitle>
-                    <CardDescription>Document your professional experience</CardDescription>
+                    <CardTitle>Kinh nghiệm Làm việc</CardTitle>
+                    <CardDescription>Ghi lại kinh nghiệm nghề nghiệp của bạn</CardDescription>
                   </div>
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Add Experience
+Thêm Kinh Nghiệm
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -544,19 +547,19 @@ export default function EnhancedProfileDashboard() {
                             <p className="text-muted-foreground">{exp.company}</p>
                             <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>
                             <p className="text-xs text-muted-foreground mt-2">
-                              {exp.startDate} - {exp.currentlyWorking ? 'Present' : exp.endDate}
+                              {exp.startDate} - {exp.currentlyWorking ? 'Hiện tại' : exp.endDate}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
                             {exp.verified ? (
                               <Badge variant="default" className="bg-green-100 text-green-800">
                                 <CheckCircle className="h-3 w-3 mr-1" />
-                                Verified
+                                Đã xác thực
                               </Badge>
                             ) : (
                               <Badge variant="secondary">
                                 <AlertCircle className="h-3 w-3 mr-1" />
-                                Unverified
+                                Chưa xác thực
                               </Badge>
                             )}
                             <Button variant="ghost" size="sm">
@@ -580,24 +583,24 @@ export default function EnhancedProfileDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Verification Status
+Trạng thái Xác thực
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Account Status</span>
+                <span className="text-sm">Trạng thái Tài khoản</span>
                 <Badge variant={user.verificationStatus === 'verified' ? 'default' : 'secondary'}>
                   {user.verificationStatus}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Documents</span>
-                <span className="text-sm text-muted-foreground">{verificationDocs.length} uploaded</span>
+                <span className="text-sm">Tài liệu</span>
+                <span className="text-sm text-muted-foreground">{verificationDocs.length} đã tải lên</span>
               </div>
               <Button variant="outline" className="w-full" asChild>
                 <Link href="/verification">
                   <FileCheck className="h-4 w-4 mr-2" />
-                  Manage Documents
+Quản lý Tài liệu
                 </Link>
               </Button>
             </CardContent>
@@ -607,26 +610,26 @@ export default function EnhancedProfileDashboard() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Quick Actions
+Hành Động Nhanh
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Button variant="outline" className="w-full justify-start" asChild>
                 <Link href="/forum">
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Join Community Forum
+Tham gia Diễn Đàn Cộng Đồng
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
                 <Link href="/scholarship">
                   <Award className="h-4 w-4 mr-2" />
-                  Browse Scholarships
+Duyệt Học bổng
                 </Link>
               </Button>
               <Button variant="outline" className="w-full justify-start" asChild>
                 <Link href="/course">
                   <BookOpen className="h-4 w-4 mr-2" />
-                  View Courses
+Xem Khóa học
                 </Link>
               </Button>
             </CardContent>

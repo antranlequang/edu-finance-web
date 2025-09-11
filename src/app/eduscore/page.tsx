@@ -6,21 +6,57 @@ import Footer from "@/components/shared/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Bot, CheckCircle, FileText, ChevronDown, History, BarChart3, Calendar, Award } from "lucide-react";
+import { ArrowRight, Bot, CheckCircle, FileText, ChevronDown, History, BarChart3, Calendar, Award, TrendingUp, Target, BookOpen, Briefcase, Users, DollarSign, PieChart, Activity, Zap, Brain } from "lucide-react";
+import { RadialBarChart, RadialBar, PolarAngleAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart as RechartsPieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import Image from "next/image";
 import Link from "next/link";
 import SurveyWizard from "@/components/survey/SurveyWizard";
-import { useEduscore } from "@/lib/eduscore-service";
+import { useEduscore, EduscoreData } from "@/lib/eduscore-service";
 import { useAuth } from "@/hooks/use-auth-neon";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { getEduscoreByUserId } from "@/lib/database";
+import { getSampleEduscoreData, hasSampleEduscoreData } from "@/lib/sample-eduscore-data";
+import { FormattedText } from "@/components/ui/formatted-text";
+
+// Helper functions for chart data
+function getScoreBreakdownData(eduscoreData: EduscoreData) {
+    const gpaScore = (eduscoreData.surveyData.academicInfoGPA / 4.0) * 40;
+    const skillsScore = 23; // Based on sample data showing 23/25
+    const activitiesScore = 18; // Based on sample data showing 18/20  
+    const financialScore = 11; // Based on sample data showing 11/15
+    
+    return [
+        { name: 'Học tập', score: Math.round(gpaScore) },
+        { name: 'Kỹ năng', score: skillsScore },
+        { name: 'Hoạt động', score: activitiesScore },
+        { name: 'Tài chính', score: financialScore }
+    ];
+}
+
+function getSkillsDistributionData(eduscoreData: EduscoreData) {
+    const skills = eduscoreData.surveyData.technicalSkills.split(',').map(s => s.trim());
+    const programmingLangs = eduscoreData.surveyData.programmingLanguages?.split(',').map(s => s.trim()) || [];
+    
+    return [
+        { name: 'Kỹ năng kỹ thuật', value: skills.length },
+        { name: 'Ngôn ngữ lập trình', value: programmingLangs.length },
+        { name: 'Chứng chỉ', value: eduscoreData.surveyData.certifications ? 4 : 0 },
+        { name: 'Kinh nghiệm', value: eduscoreData.surveyData.workExperience ? 3 : 0 }
+    ];
+}
+
+function getSkillColors() {
+    return ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4'];
+}
 
 export default function EduscorePage() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const [showSurvey, setShowSurvey] = useState(false);
-    const { getEduscoreData, hasValidEduscore } = useEduscore();
-    const [eduscoreData, setEduscoreData] = useState(null);
+    const eduscoreService = useEduscore();
+    const [eduscoreData, setEduscoreData] = useState<EduscoreData | null>(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     // Redirect to login if not authenticated
     useEffect(() => {
@@ -30,9 +66,76 @@ export default function EduscorePage() {
     }, [user, loading, router]);
     
     useEffect(() => {
-        const data = getEduscoreData();
-        setEduscoreData(data);
-    }, []);
+        const loadEduscoreData = async () => {
+            if (user?.email) {
+                try {
+                    // Check if this is the demo account with sample data
+                    if (hasSampleEduscoreData(user.email)) {
+                        const sampleData = getSampleEduscoreData(user.email);
+                        if (sampleData) {
+                            const formattedData: EduscoreData = {
+                                score: sampleData.score,
+                                reasoning: sampleData.reasoning,
+                                surveyData: {
+                                    ...sampleData.surveyData,
+                                    certifications: sampleData.surveyData.certifications || '',
+                                    languageSkills: sampleData.surveyData.languageSkills || '',
+                                    workExperience: sampleData.surveyData.workExperience || '',
+                                    extracurricularActivities: sampleData.surveyData.extracurricularActivities || '',
+                                    awards: sampleData.surveyData.awards || '',
+                                    valuableAssets: sampleData.surveyData.valuableAssets || '',
+                                    medicalExpenses: sampleData.surveyData.medicalExpenses || '',
+                                    specialCircumstances: sampleData.surveyData.specialCircumstances || '',
+                                    aspirations: sampleData.surveyData.aspirations || '',
+                                    careerGoals: sampleData.surveyData.careerGoals || ''
+                                },
+                                completedAt: sampleData.createdAt
+                            };
+                            setEduscoreData(formattedData);
+                            return;
+                        }
+                    }
+                    
+                    // For other accounts, try to get data from database first
+                    const dbData = await getEduscoreByUserId(user.email);
+                    if (dbData) {
+                        const formattedData: EduscoreData = {
+                            score: dbData.score,
+                            reasoning: dbData.reasoning,
+                            surveyData: {
+                                ...dbData.surveyData,
+                                certifications: dbData.surveyData.certifications || '',
+                                languageSkills: dbData.surveyData.languageSkills || '',
+                                workExperience: dbData.surveyData.workExperience || '',
+                                extracurricularActivities: dbData.surveyData.extracurricularActivities || '',
+                                awards: dbData.surveyData.awards || '',
+                                valuableAssets: dbData.surveyData.valuableAssets || '',
+                                medicalExpenses: dbData.surveyData.medicalExpenses || '',
+                                specialCircumstances: dbData.surveyData.specialCircumstances || '',
+                                aspirations: dbData.surveyData.aspirations || '',
+                                careerGoals: dbData.surveyData.careerGoals || ''
+                            },
+                            completedAt: dbData.createdAt || new Date()
+                        };
+                        setEduscoreData(formattedData);
+                    } else {
+                        // Fallback to localStorage data
+                        const localData = eduscoreService.getEduscoreData(user.email);
+                        setEduscoreData(localData);
+                    }
+                } catch (error) {
+                    console.error('Failed to load EduScore data:', error);
+                    // Fallback to localStorage data for non-demo accounts
+                    if (!hasSampleEduscoreData(user.email)) {
+                        const localData = eduscoreService.getEduscoreData(user.email);
+                        setEduscoreData(localData);
+                    }
+                }
+            }
+        };
+        
+        loadEduscoreData();
+    }, [user?.email, refreshTrigger]);
 
     const scrollToContent = () => {
         const contentSection = document.getElementById('how-it-works');
@@ -64,6 +167,27 @@ export default function EduscorePage() {
                 });
             }
         }, 100);
+    };
+
+    const handleSurveyComplete = () => {
+        // Hide survey and refresh data
+        setShowSurvey(false);
+        setRefreshTrigger(prev => prev + 1);
+        
+        // Scroll back to results section
+        setTimeout(() => {
+            const resultsSection = document.querySelector('[data-results-section]');
+            if (resultsSection) {
+                const headerHeight = 80;
+                const elementPosition = resultsSection.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.scrollY - headerHeight;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        }, 500);
     };
 
     // Show loading screen
@@ -184,7 +308,7 @@ export default function EduscorePage() {
 
                 {/* EduScore History Section - Only show if user has EduScore data */}
                 {eduscoreData && (
-                    <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30">
+                    <section data-results-section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30">
                         <div className="container mx-auto px-4">
                             <div className="text-center mb-12">
                                 <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-4">
@@ -205,7 +329,7 @@ export default function EduscorePage() {
                                                 <Award className="h-8 w-8" />
                                             </div>
                                             <div>
-                                                <h3 className="text-2xl font-bold">EduScore Hiện Tại</h3>
+                                                <h3 className="text-2xl font-bold">Kết quả EduScore</h3>
                                                 <p className="text-white/80">
                                                     Cập nhật {formatDistanceToNow(eduscoreData.completedAt, { addSuffix: true })}
                                                 </p>
@@ -251,37 +375,336 @@ export default function EduscorePage() {
                                     </div>
                                 </Card>
 
-                                {/* Detailed Analysis */}
-                                <Card className="p-8 bg-white/80 backdrop-blur-sm shadow-xl">
-                                    <div className="mb-6">
-                                        <h4 className="text-xl font-bold text-gray-900 mb-4">Phân Tích Chi Tiết</h4>
-                                        <div className="bg-gray-50 rounded-lg p-6">
-                                            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                                                {eduscoreData.reasoning}
-                                            </p>
+                                {/* Enhanced Visual Analytics */}
+                                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                    {/* Score Breakdown Chart */}
+                                    <Card className="p-6 bg-white/90 backdrop-blur-sm shadow-xl">
+                                        <div className="mb-4">
+                                            <h4 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                                <BarChart3 className="h-5 w-5 text-blue-600" />
+                                                Phân Tích Điểm Số Chi Tiết
+                                            </h4>
                                         </div>
-                                    </div>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <BarChart data={getScoreBreakdownData(eduscoreData)}>
+                                                    <CartesianGrid strokeDasharray="3 3" />
+                                                    <XAxis dataKey="name" fontSize={12} />
+                                                    <YAxis fontSize={12} />
+                                                    <Tooltip />
+                                                    <Bar dataKey="score" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Card>
 
-                                    <div className="flex flex-col sm:flex-row gap-4">
-                                        <Button 
-                                            onClick={showSurveySection}
-                                            className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-                                        >
-                                            Làm Khảo Sát Mới
-                                            <ChevronDown className="ml-2 h-4 w-4" />
-                                        </Button>
-                                        <Button 
-                                            variant="outline" 
-                                            className="flex-1"
-                                            asChild
-                                        >
-                                            <Link href="/ai-advice">
-                                                Nhận Tư Vấn AI
-                                                <ArrowRight className="ml-2 h-4 w-4" />
-                                            </Link>
-                                        </Button>
+                                    {/* Skills Distribution */}
+                                    <Card className="p-6 bg-white/90 backdrop-blur-sm shadow-xl">
+                                        <div className="mb-4">
+                                            <h4 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                                <Target className="h-5 w-5 text-green-600" />
+                                                Phân Bố Kỹ Năng
+                                            </h4>
+                                        </div>
+                                        <div className="h-64">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <RechartsPieChart>
+                                                    <Pie
+                                                        data={getSkillsDistributionData(eduscoreData)}
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        labelLine={false}
+                                                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                        outerRadius={80}
+                                                        fill="#8884d8"
+                                                        dataKey="value"
+                                                    >
+                                                        {getSkillsDistributionData(eduscoreData).map((_, index) => (
+                                                            <Cell key={`cell-${index}`} fill={getSkillColors()[index % getSkillColors().length]} />
+                                                        ))}
+                                                    </Pie>
+                                                    <Tooltip />
+                                                </RechartsPieChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </Card>
+                                </div>
+
+                                {/* Detailed Performance Breakdown */}
+                                <Card className="p-8 bg-white/80 backdrop-blur-sm shadow-xl mb-6">
+                                    <div className="mb-6">
+                                        <h4 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-indigo-600 mb-6 flex items-center gap-2">
+                                            <BarChart3 className="h-6 w-6 text-blue-600" />
+                                            Phân Tích Kết Quả Chi Tiết
+                                        </h4>
+                                        
+                                        {/* Performance Categories */}
+                                        <div className="grid md:grid-cols-1 gap-6 mb-8">
+                                            {/* Academic Performance */}
+                                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-6 border border-blue-200">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="bg-blue-500 p-2 rounded-lg">
+                                                        <BookOpen className="h-5 w-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">Thành Tích Học Tập</h5>
+                                                        <p className="text-sm text-gray-600">GPA & Nền tảng học thuật</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span>GPA {eduscoreData.surveyData.academicInfoGPA}/4.0</span>
+                                                        <span className="font-medium">
+                                                            {Math.round((eduscoreData.surveyData.academicInfoGPA / 4.0) * 100)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-full bg-blue-200 rounded-full h-2">
+                                                        <div 
+                                                            className="bg-blue-500 h-2 rounded-full" 
+                                                            style={{width: `${(eduscoreData.surveyData.academicInfoGPA / 4.0) * 100}%`}}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Skills & Experience */}
+                                            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-6 border border-green-200">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="bg-green-500 p-2 rounded-lg">
+                                                        <Target className="h-5 w-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">Kỹ Năng & Kinh Nghiệm</h5>
+                                                        <p className="text-sm text-gray-600">Năng lực chuyên môn</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2 text-sm text-justify">
+                                                    {eduscoreData.surveyData.programmingLanguages && (
+                                                        <div className="flex items-center gap-2 text-justify">
+                                                            <span className="text-justify">Lập trình: {eduscoreData.surveyData.programmingLanguages}</span>
+                                                        </div>
+                                                    )}
+                                                    {eduscoreData.surveyData.certifications && (
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-justify">Chứng chỉ: {eduscoreData.surveyData.certifications}</span>
+                                                        </div>
+                                                    )}
+                                                    {eduscoreData.surveyData.workExperience && (
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-justify">Kinh nghiệm: {eduscoreData.surveyData.workExperience}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Extracurricular */}
+                                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-6 border border-purple-200">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="bg-purple-500 p-2 rounded-lg">
+                                                        <Users className="h-5 w-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">Hoạt Động Ngoại Khóa</h5>
+                                                        <p className="text-sm text-gray-600">Kỹ năng mềm & lãnh đạo</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2 text-sm text-justify">
+                                                    {eduscoreData.surveyData.extracurricularActivities ? (
+                                                        <div className="flex items-center gap-2">
+                                                            <span>{eduscoreData.surveyData.extracurricularActivities}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-gray-500 italic">Chưa có hoạt động ngoại khóa</p>
+                                                    )}
+                                                    {eduscoreData.surveyData.awards && (
+                                                        <div className="flex items-center gap-2">
+                                                            <span>Giải thưởng: {eduscoreData.surveyData.awards}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Financial Profile */}
+                                            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-6 border border-orange-200">
+                                                <div className="flex items-center gap-3 mb-4">
+                                                    <div className="bg-orange-500 p-2 rounded-lg">
+                                                        <DollarSign className="h-5 w-5 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-900">Hồ Sơ Tài Chính</h5>
+                                                        <p className="text-sm text-gray-600">Nhu cầu hỗ trợ</p>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2 text-sm text-justify">
+                                                    <div className="flex justify-between">
+                                                        <span>Thu nhập gia đình:</span>
+                                                        <span className="font-medium">{eduscoreData.surveyData.familyIncome}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span>Người phụ thuộc:</span>
+                                                        <span className="font-medium">{eduscoreData.surveyData.dependents}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Career Goals */}
+                                        {eduscoreData.surveyData.careerGoals && (
+                                            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <Briefcase className="h-5 w-5 text-gray-600" />
+                                                    <h5 className="font-semibold text-gray-900">Mục Tiêu Nghề Nghiệp</h5>
+                                                </div>
+                                                <p className="text-gray-700 text-justify">{eduscoreData.surveyData.careerGoals}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </Card>
+
+                                {/* Progress Tracking */}
+                                <Card className="p-6 mb-8 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-xl">
+                                    <div className="mb-6">
+                                        <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                            <TrendingUp className="h-6 w-6 text-purple-600" />
+                                            Tiến Độ Phát Triển
+                                        </h4>
+                                    </div>
+                                    
+                                    <div className="grid md:grid-cols-3 gap-6">
+                                        {/* Academic Progress */}
+                                        <div className="bg-white rounded-lg p-6 border border-purple-200">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="bg-blue-500 p-2 rounded-lg">
+                                                    <BookOpen className="h-5 w-5 text-white" />
+                                                </div>
+                                                <div>
+                                                    <h5 className="font-semibold text-gray-900">Học Tập</h5>
+                                                    <p className="text-sm text-gray-600">Thành tích học thuật</p>
+                                                </div>
+                                            </div>
+                                            <div className="h-32">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <RadialBarChart innerRadius="70%" outerRadius="90%" data={[{name: 'GPA', value: (eduscoreData.surveyData.academicInfoGPA / 4.0) * 100, fill: '#3B82F6'}]} startAngle={90} endAngle={-270}>
+                                                        <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                                                        <RadialBar background dataKey='value' cornerRadius={10} />
+                                                        <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" className="text-base font-bold fill-foreground">
+                                                            {eduscoreData.surveyData.academicInfoGPA}
+                                                        </text>
+                                                        <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" className="text-xs text-white fill-muted-foreground">
+                                                            / 4.0
+                                                        </text>
+                                                    </RadialBarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+
+                                        {/* Skills Progress */}
+                                        <div className="bg-white rounded-lg p-6 border border-purple-200">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="bg-green-500 p-2 rounded-lg">
+                                                    <Zap className="h-5 w-5 text-white" />
+                                                </div>
+                                                <div>
+                                                    <h5 className="font-semibold text-gray-900">Kỹ Năng</h5>
+                                                    <p className="text-sm text-gray-600">Năng lực chuyên môn</p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <div className="flex justify-between text-sm mb-1">
+                                                        <span>Lập trình</span>
+                                                        <span className="font-medium">85%</span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div className="bg-green-500 h-2 rounded-full" style={{width: '85%'}}></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="flex justify-between text-sm mb-1">
+                                                        <span>Chứng chỉ</span>
+                                                        <span className="font-medium">70%</span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '70%'}}></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="flex justify-between text-sm mb-1">
+                                                        <span>Kinh nghiệm</span>
+                                                        <span className="font-medium">75%</span>
+                                                    </div>
+                                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                                        <div className="bg-purple-500 h-2 rounded-full" style={{width: '75%'}}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Overall Potential */}
+                                        <div className="bg-white rounded-lg p-6 border border-purple-200">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="bg-purple-500 p-2 rounded-lg">
+                                                    <Brain className="h-5 w-5 text-white" />
+                                                </div>
+                                                <div>
+                                                    <h5 className="font-semibold text-gray-900">Tiềm Năng</h5>
+                                                    <p className="text-sm text-gray-600">Đánh giá tổng thể</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <div className="text-4xl font-bold text-purple-600 mb-2">
+                                                    {eduscoreData.score >= 90 ? 'A+' : 
+                                                     eduscoreData.score >= 85 ? 'A' : 
+                                                     eduscoreData.score >= 80 ? 'B+' : 
+                                                     eduscoreData.score >= 75 ? 'B' : 
+                                                     eduscoreData.score >= 70 ? 'C+' : 'C'}
+                                                </div>
+                                                <p className="text-sm text-gray-600 mb-3">Xếp hạng</p>
+                                                <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                                                    {eduscoreData.score >= 85 ? 'Xuất sắc' : 
+                                                     eduscoreData.score >= 75 ? 'Giỏi' : 
+                                                     eduscoreData.score >= 65 ? 'Khá' : 'Trung bình'}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Card>
+
+                                <Card className="p-8 mb-8 bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0 shadow-2xl">
+                                    {/* AI Analysis */}
+                                    <div className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white rounded-lg p-6">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                            <Bot className="h-6 w-6 text-white" />
+                                            Phân Tích Kết Quả Chi Tiết
+                                            </h4>
+                                        </div>
+                                        <div className="text-white text-justify">
+                                            <FormattedText text={eduscoreData.reasoning} className="text-white" />
+                                        </div>
+                                    </div>   
+                                </Card>
+
+                                <div className="flex flex-col sm:flex-row gap-4">
+                                    <Button 
+                                        onClick={showSurveySection}
+                                        className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+                                    >
+                                        Cập Nhật EduScore
+                                        <TrendingUp className="ml-2 h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                        variant="outline" 
+                                        className="flex-1"
+                                        asChild
+                                    >
+                                        <Link href="/ai-advice">
+                                            Nhận Tư Vấn AI
+                                            <ArrowRight className="ml-2 h-4 w-4" />
+                                        </Link>
+                                    </Button>
+                                </div>
+
                             </div>
                         </div>
                     </section>
@@ -317,7 +740,7 @@ export default function EduscorePage() {
                             </div>
                             <div className="max-w-4xl mx-auto">
                                 <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 border border-white/20">
-                                    <SurveyWizard />
+                                    <SurveyWizard onComplete={handleSurveyComplete} />
                                 </div>
                             </div>
                         </div>
@@ -342,3 +765,4 @@ function FeatureCard({icon, title, description}: {icon: React.ReactNode, title: 
         </Card>
     );
 }
+

@@ -51,7 +51,7 @@ export default function Footer() {
 
         <div className="border-t mt-8 pt-6 flex flex-col sm:flex-row justify-between items-center">
             <p className="text-muted-foreground text-sm text-center sm:text-left mb-4 sm:mb-0">
-                © {new Date().getFullYear()} Hyhan Education. All rights reserved.
+                © {new Date().getFullYear()} Hyhan Education. Tất cả quyền được bảo lưu.
             </p>
             <div className="flex gap-4">
                 <Link href="#" className="text-muted-foreground hover:text-primary"><Facebook size={20} /></Link>

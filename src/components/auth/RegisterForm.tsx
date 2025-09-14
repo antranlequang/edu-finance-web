@@ -6,9 +6,11 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { format } from "date-fns";
+import { vi } from "date-fns/locale/vi";
 import { useAuth } from '@/hooks/use-auth-neon';
+import ReCAPTCHA from "react-google-recaptcha";
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +35,11 @@ const formSchema = z.object({
   gender: z.string({ required_error: "Please select a gender." }),
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
+  confirmPassword: z.string().min(8, { message: 'Confirm password must be at least 8 characters.' }),
+  captcha: z.string().min(1, { message: 'Vui lòng xác thực CAPTCHA.' }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
 export default function RegisterForm() {
@@ -47,12 +54,28 @@ export default function RegisterForm() {
       fullName: '',
       email: '',
       password: '',
+      confirmPassword: '',
+      captcha: '',
     }
   });
 
+  const [inputValue, setInputValue] = useState("");
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
+      // Verify CAPTCHA
+      if (!values.captcha) {
+        toast({
+          variant: 'destructive',
+          title: 'Lỗi xác thực',
+          description: 'Vui lòng hoàn thành xác thực CAPTCHA.'
+        });
+        setIsLoading(false);
+        return;
+      }
+
       await register(
         values.email, 
         values.password, 
@@ -60,6 +83,12 @@ export default function RegisterForm() {
         values.dob,
         values.gender
       );
+      
+      // Reset CAPTCHA on success
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
+      
       toast({ 
         title: 'Đăng ký thành công!', 
         description: 'Tài khoản của bạn đã được tạo thành công!' 
@@ -73,12 +102,23 @@ export default function RegisterForm() {
           type: 'manual',
           message: 'Email này đã được sử dụng.',
         });
+      } else if (error.message.includes("Mật khẩu không khớp")) {
+        form.setError('confirmPassword', {
+          type: 'manual',
+          message: 'Mật khẩu không khớp.',
+        });
       } else {
         toast({ 
             variant: 'destructive',
             title: 'Đăng ký thất bại', 
             description: error.message || 'Lỗi không xác định, hãy thử lại.' 
         });
+      }
+      
+      // Reset CAPTCHA on error
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+        form.setValue('captcha', '');
       }
     } finally {
         setIsLoading(false);
@@ -100,7 +140,7 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Họ và Tên</FormLabel>
                   <FormControl>
-                    <Input placeholder="VD: Trần Lê Quang An" {...field} />
+                    <Input placeholder="Nguyễn Văn A" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -112,41 +152,153 @@ export default function RegisterForm() {
                   control={form.control}
                   name="dob"
                   render={({ field }) => (
-                    <FormItem className="w-full">
-                      <FormLabel>Ngày sinh</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Chọn ngày sinh</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date > new Date() || date < new Date("1900-01-01")
-                            }
-                            initialFocus
+                  <FormItem className="w-full">
+                    <FormLabel>Ngày sinh</FormLabel>
+                    <Popover>
+                      <FormControl>
+                        <div className="flex">
+                          <Input
+                            placeholder="dd/mm/yyyy"
+                            value={inputValue}
+                            onChange={(e) => {
+                              const rawValue = e.target.value;
+                              const prevLength = inputValue.length;
+                              const currentLength = rawValue.length;
+                              
+                              // Handle deletion
+                              if (currentLength < prevLength) {
+                                let val = rawValue.replace(/\D/g, '');
+                                
+                                // Auto-format with slashes
+                                if (val.length >= 2) {
+                                  val = val.substring(0, 2) + '/' + val.substring(2);
+                                }
+                                if (val.length >= 5) {
+                                  val = val.substring(0, 5) + '/' + val.substring(5, 9);
+                                }
+                                
+                                setInputValue(val);
+                              } else {
+                                // Handle normal input
+                                let val = rawValue.replace(/\D/g, '');
+                                
+                                // Limit to 8 digits (DDMMYYYY)
+                                val = val.substring(0, 8);
+                                
+                                // Auto-format with slashes
+                                if (val.length >= 2) {
+                                  val = val.substring(0, 2) + '/' + val.substring(2);
+                                }
+                                if (val.length >= 5) {
+                                  val = val.substring(0, 5) + '/' + val.substring(5);
+                                }
+                                
+                                setInputValue(val);
+                              }
+
+                              // Parse and validate date
+                              const cleanVal = rawValue.replace(/\D/g, '');
+                              if (cleanVal.length === 8) {
+                                const day = cleanVal.substring(0, 2);
+                                const month = cleanVal.substring(2, 4);
+                                const year = cleanVal.substring(4, 8);
+                                
+                                const parsed = new Date(`${year}-${month}-${day}`);
+                                if (!isNaN(parsed.getTime())) {
+                                  field.onChange(parsed);
+                                }
+                              }
+                            }}
                           />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              className="ml-2"
+                            >
+                              <CalendarIcon className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                        </div>
+                      </FormControl>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="p-3 border-b">
+                          <div className="flex gap-2">
+                            <Select
+                              value={field.value ? (field.value.getMonth() + 1).toString() : ""}
+                              onValueChange={(value) => {
+                                const currentDate = field.value || new Date();
+                                const newDate = new Date(currentDate.getFullYear(), parseInt(value) - 1, currentDate.getDate());
+                                field.onChange(newDate);
+                                setInputValue(format(newDate, "dd/MM/yyyy", { locale: vi }));
+                              }}
+                            >
+                              <SelectTrigger className="w-[120px]">
+                                <SelectValue placeholder="Tháng" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[
+                                  "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6",
+                                  "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
+                                ].map((month, i) => (
+                                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                                    {month}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={field.value ? field.value.getFullYear().toString() : ""}
+                              onValueChange={(value) => {
+                                const currentDate = field.value || new Date();
+                                const newDate = new Date(parseInt(value), currentDate.getMonth(), currentDate.getDate());
+                                field.onChange(newDate);
+                                setInputValue(format(newDate, "dd/MM/yyyy", { locale: vi }));
+                              }}
+                            >
+                              <SelectTrigger className="w-[100px]">
+                                <SelectValue placeholder="Năm" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Array.from({ length: 100 }, (_, i) => {
+                                  const year = new Date().getFullYear() - i;
+                                  return (
+                                    <SelectItem key={year} value={year.toString()}>
+                                      {year}
+                                    </SelectItem>
+                                  );
+                                })}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            if (date) {
+                              field.onChange(date);
+                              setInputValue(format(date, "dd/MM/yyyy", { locale: vi }));
+                            }
+                          }}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          month={field.value || new Date()}
+                          onMonthChange={(month) => {
+                            if (field.value) {
+                              const newDate = new Date(month.getFullYear(), month.getMonth(), field.value.getDate());
+                              field.onChange(newDate);
+                              setInputValue(format(newDate, "dd/MM/yyyy", { locale: vi }));
+                            }
+                          }}
+                          locale={vi}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
                   )}
                 />
               </div>
@@ -182,7 +334,7 @@ export default function RegisterForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="VD: tranlequangan2308@gmail.com" {...field} />
+                    <Input placeholder="nguyenvana@gmail.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -196,6 +348,42 @@ export default function RegisterForm() {
                   <FormLabel>Mật khẩu</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Xác nhận mật khẩu</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="••••••••" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="captcha"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Xác thực bảo mật</FormLabel>
+                  <FormControl>
+                    <ReCAPTCHA
+                      ref={recaptchaRef}
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                      onChange={(token) => {
+                        field.onChange(token || "");
+                      }}
+                      onExpired={() => {
+                        field.onChange("");
+                      }}
+                      hl="vi"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

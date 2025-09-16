@@ -6,26 +6,20 @@ interface FormattedTextProps {
 }
 
 export function FormattedText({ text, className = "" }: FormattedTextProps) {
-  // Simple markdown parser for basic formatting
+  // Simple but effective markdown parser that preserves line breaks
   const formatText = (text: string) => {
-    const lines = text.split('\n');
-    return lines.map((line, index) => {
-      // Handle bold text **text**
-      let formattedLine = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      // Handle italic text *text* (but not bold which uses **)
-      formattedLine = formattedLine.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
-      
-      return (
-        <div key={index} className={line.trim() === '' ? 'mb-2' : ''}>
-          <span dangerouslySetInnerHTML={{ __html: formattedLine }} />
-        </div>
-      );
-    });
+    // Handle bold text **text** - only for headers
+    let formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-lg">$1</strong>');
+    // Handle italic text *text* (but not bold which uses **)
+    formattedText = formattedText.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em class="italic">$1</em>');
+    
+    return formattedText;
   };
 
   return (
-    <div className={`whitespace-pre-wrap ${className}`}>
-      {formatText(text)}
-    </div>
+    <div 
+      className={`leading-relaxed whitespace-pre-line ${className}`}
+      dangerouslySetInnerHTML={{ __html: formatText(text) }}
+    />
   );
 }

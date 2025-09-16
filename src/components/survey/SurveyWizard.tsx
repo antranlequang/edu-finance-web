@@ -18,7 +18,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2 } from 'lucide-react';
-import SurveyResult from './SurveyResult';
 
 const formSchema = z.object({
   academicInfoGPA: z.coerce.number().min(0, "Điểm trung bình (GPA) phải từ 0 trở lên.").max(4, "Điểm trung bình (GPA) không được vượt quá 4.0."),
@@ -38,7 +37,7 @@ const formSchema = z.object({
   valuableAssets: z.string().optional(),
   medicalExpenses: z.string().optional(),
   specialCircumstances: z.string().optional(),
-  aspirations: z.string().optional(),
+  aspirations: z.string().min(1, "Vui lòng nhập ít nhất 50 ký tự cho nguyện vọng của bạn."),
   careerGoals: z.string().optional(),
 });
 
@@ -60,7 +59,6 @@ interface SurveyWizardProps {
 export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState<EvaluateEduscoreSurveyOutput | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -112,7 +110,7 @@ export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
   // Fast local evaluation function - instant scoring
   const evaluateEduscoreFast = (surveyData: SurveyFormValues): EvaluateEduscoreSurveyOutput => {
     let score = 0;
-    let reasoning = "Phân tích EduScore của bạn:\n\n";
+    let reasoning = "";
     
     // Academic Performance (40 points max)
     const gpaScore = (surveyData.academicInfoGPA / 4.0) * 40;
@@ -180,8 +178,7 @@ export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
     // Final score adjustment
     score = Math.min(Math.max(score, 30), 100);
     
-    reasoning += `📊 **Tổng kết:**\n`;
-    reasoning += `- **EduScore: ${Math.round(score)}/100**\n`;
+    reasoning += `📊 **Tổng kết: EduScore: ${Math.round(score)}/100**\n`;
     if (score >= 85) {
       reasoning += "- Hồ sơ xuất sắc! Bạn có cơ hội cao với các học bổng danh giá.\n";
     } else if (score >= 75) {
@@ -191,8 +188,6 @@ export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
     } else {
       reasoning += "- Hồ sơ cần cải thiện đáng kể để tăng cơ hội học bổng.\n";
     }
-    
-    reasoning += "\n✨ **Lời khuyên:** Tiếp tục phát triển kỹ năng, tham gia hoạt động ngoại khóa và duy trì thành tích học tập tốt!";
     
     return {
       eduscore: Math.round(score),
@@ -206,15 +201,24 @@ export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
       return;
     }
     
-    setIsLoading(true);
+    if (currentStep < steps.length - 1) {
+      return;
+    }
+
     try {
-      let surveyResult;
-      
-      // Use fast local evaluation for instant results
-      surveyResult = evaluateEduscoreFast(data);
-      
-      // Save to database
-      await saveEduscoreResult(user.email, {
+      // Compute instantly on client
+      const surveyResult = evaluateEduscoreFast(data);
+
+      // Store locally and render immediately
+      localStorage.setItem('eduscoreResult', JSON.stringify(surveyResult));
+      localStorage.setItem('surveyData', JSON.stringify(data));
+      toast({ title: "Đánh giá hoàn tất!", description: "Kết quả đã được cập nhật, đang lưu lên hệ thống..." });
+
+      // Notify parent to refresh and scroll
+      if (onComplete) onComplete();
+
+      // Fire-and-forget save to database (non-blocking)
+      void saveEduscoreResult(user.email, {
         userId: user.email,
         score: surveyResult.eduscore,
         reasoning: surveyResult.reasoning,
@@ -243,24 +247,15 @@ export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
           transcript: null,
           recommendationLetter: null
         }
+      }).then(() => {
+        toast({ title: "Đã lưu thành công", description: "Kết quả đã được lưu trên hệ thống." });
+      }).catch((error) => {
+        console.error(error);
+        toast({ variant: 'destructive', title: "Lưu thất bại", description: "Không thể lưu kết quả lên hệ thống." });
       });
-      
-      // Store result and survey data in localStorage for immediate use
-      localStorage.setItem('eduscoreResult', JSON.stringify(surveyResult));
-      localStorage.setItem('surveyData', JSON.stringify(data));
-
-      setResult(surveyResult);
-      toast({ title: "Đánh giá hoàn tất!", description: "Đánh giá Eduscore đã được tính toán xong và lưu trên hệ thống." });
-      
-      // Call onComplete callback after successful completion
-      if (onComplete) {
-        setTimeout(() => onComplete(), 2000); // Delay to let user see the result
-      }
     } catch (error) {
       console.error(error);
       toast({ variant: 'destructive', title: "Đã xảy ra lỗi", description: "Không thể đánh giá khảo sát. Vui lòng thử lại." });
-    } finally {
-      setIsLoading(false);
     }
   };
   
@@ -272,10 +267,6 @@ export default function SurveyWizard({ onComplete }: SurveyWizardProps = {}) {
         <p className="text-muted-foreground mt-2">Hệ thống đang phân tích phản hồi của bạn. Quá trình này có thể mất một chút thời gian.</p>
       </div>
     );
-  }
-
-  if (result) {
-    return <SurveyResult result={result} />;
   }
 
   return (

@@ -63,9 +63,7 @@ export default function AboutUsPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-lg text-gray-700 leading-relaxed text-justify"> 
-                      Xây dựng một hệ sinh thái công bằng và minh bạch kết nối người học, tổ chức giáo dục và nhà tuyển dụng. 
-                      Chúng tôi tận dụng AI để cung cấp hướng dẫn cá nhân hóa, đảm bảo mọi người đều có thể phát huy hết tiềm năng 
-                      của mình bất kể xuất thân.
+                      HYHAN tin rằng mỗi bạn trẻ đều xứng đáng được chắp cánh để theo đuổi ước mơ, bất kể xuất phát điểm và mong muốn trở thành một người bạn đồng hành đáng tin cậy, mang đến cơ hội công bằng, minh bạch và bền vững.
                     </p>
                   </CardContent>
                 </Card>
@@ -81,9 +79,7 @@ export default function AboutUsPage() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-lg text-gray-700 leading-relaxed text-justify">
-                      Chúng tôi hình dung một tương lai nơi giáo dục là quyền phổ quát, không phải đặc quyền. 
-                      Nền tảng của chúng tôi hướng tới trở thành lực lượng dẫn đầu trong việc phá bỏ rào cản 
-                      để tạo ra một cộng đồng toàn cầu được xây dựng trên kiến thức, kỹ năng và cơ hội.
+                      Trở thành nền tảng hàng đầu kết nối giáo dục và tài chính tại Việt Nam, tạo cơ hội bình đẳng cho mọi sinh viên tiếp cận nguồn lực học tập và phát triển sự nghiệp.
                     </p>
                   </CardContent>
                 </Card>
@@ -162,7 +158,7 @@ export default function AboutUsPage() {
               <ValueCard
                 icon={<HeartHandshake />}
                 title="Nhân văn"
-                description="Chúng tôi ưu tiên ph福祉 và khát vọng của cá nhân, đối xử với mọi người bằng sự đồng cảm."
+                description="Chúng tôi ưu tiên phát triển khát vọng của cá nhân, đối xử với mọi người bằng sự đồng cảm."
                 gradient="from-emerald-500 to-blue-500"
               />
               <ValueCard

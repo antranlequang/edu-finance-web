@@ -190,6 +190,34 @@ export const getEduscoreByUserId = async (userId: string): Promise<EduscoreData 
   }
 };
 
+export const getEduscoreHistoryByUserId = async (userId: string): Promise<EduscoreData[]> => {
+  try {
+    const q = query(
+      collection(db, 'eduscores'),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const querySnap = await getDocs(q);
+
+    return querySnap.docs.map(docSnap => {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        userId: data.userId,
+        score: data.score,
+        reasoning: data.reasoning,
+        surveyData: data.surveyData,
+        documentUrls: data.documentUrls,
+        createdAt: data.createdAt?.toDate(),
+        updatedAt: data.updatedAt?.toDate()
+      } as EduscoreData;
+    });
+  } catch (error) {
+    console.error('Error getting eduscore history:', error);
+    throw error;
+  }
+};
+
 // Document Verification Functions
 export const uploadVerificationDocument = async (
   userId: string, 

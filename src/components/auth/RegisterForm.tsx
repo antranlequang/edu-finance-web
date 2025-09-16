@@ -6,11 +6,10 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { format } from "date-fns";
 import { vi } from "date-fns/locale/vi";
 import { useAuth } from '@/hooks/use-auth-neon';
-import ReCAPTCHA from "react-google-recaptcha";
 
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +35,6 @@ const formSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
   confirmPassword: z.string().min(8, { message: 'Confirm password must be at least 8 characters.' }),
-  captcha: z.string().min(1, { message: 'Vui lòng xác thực CAPTCHA.' }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -55,27 +53,14 @@ export default function RegisterForm() {
       email: '',
       password: '',
       confirmPassword: '',
-      captcha: '',
     }
   });
 
   const [inputValue, setInputValue] = useState("");
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      // Verify CAPTCHA
-      if (!values.captcha) {
-        toast({
-          variant: 'destructive',
-          title: 'Lỗi xác thực',
-          description: 'Vui lòng hoàn thành xác thực CAPTCHA.'
-        });
-        setIsLoading(false);
-        return;
-      }
-
       await register(
         values.email, 
         values.password, 
@@ -83,11 +68,6 @@ export default function RegisterForm() {
         values.dob,
         values.gender
       );
-      
-      // Reset CAPTCHA on success
-      if (recaptchaRef.current) {
-        recaptchaRef.current.reset();
-      }
       
       toast({ 
         title: 'Đăng ký thành công!', 
@@ -113,12 +93,6 @@ export default function RegisterForm() {
             title: 'Đăng ký thất bại', 
             description: error.message || 'Lỗi không xác định, hãy thử lại.' 
         });
-      }
-      
-      // Reset CAPTCHA on error
-      if (recaptchaRef.current) {
-        recaptchaRef.current.reset();
-        form.setValue('captcha', '');
       }
     } finally {
         setIsLoading(false);
@@ -361,29 +335,6 @@ export default function RegisterForm() {
                   <FormLabel>Xác nhận mật khẩu</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="captcha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Xác thực bảo mật</FormLabel>
-                  <FormControl>
-                    <ReCAPTCHA
-                      ref={recaptchaRef}
-                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                      onChange={(token) => {
-                        field.onChange(token || "");
-                      }}
-                      onExpired={() => {
-                        field.onChange("");
-                      }}
-                      hl="vi"
-                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

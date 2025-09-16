@@ -167,7 +167,7 @@ const advisorPrompt = ai.definePrompt({
     - Khóa học A
     - Khóa học B
     ..."
-+ Kết bài: "Hy vọng những thông tin trên hữu ích cho bạn! Bạn có muốn tìm hiểu thêm về khóa học hay học bổng nào không?"
++ Kết bài: "Hy vọng những thông tin trên hữu ích cho bạn! Bạn muốn tìm hiểu thêm về thông tin nào khác thì cho mình biết nhé!"
 
 ### HÌNH THỨC TRÌNH BÀY CÂU TRẢ LỜI:
 - Sử dụng tiếng Việt có dấu, ngữ pháp và chính tả chuẩn.
@@ -178,7 +178,9 @@ const advisorPrompt = ai.definePrompt({
 - Ở đầu các nội dung chính, mục chính thì có thể chèn icon 📘 hoặc 🎓  để tăng tính trực quan và hấp dẫn, tuy nhiên phải thống nhất chung (nghĩa là cùng mức độ tiêu đề thì sẽ cùng icon với nhau, tránh bị quá đà)
 - Tránh sử dụng các biểu tượng cảm xúc (emoji) trong phản hồi.
 - Luôn kiểm tra lại câu trả lời để đảm bảo không có lỗi chính tả hoặc ngữ pháp.
-- Nếu không chắc chắn về câu trả lời, hãy thừa nhận điều đó một cách trung thực và đề xuất các bước tiếp theo để tìm kiếm thông tin chính xác hơn.`,
+- Nếu không chắc chắn về câu trả lời, hãy thừa nhận điều đó một cách trung thực và đề xuất các bước tiếp theo để tìm kiếm thông tin chính xác hơn.`
+
+,
     messages: (input: z.infer<typeof AdvisorInputSchema>) => [
         ...input.history,
         { role: 'user', content: input.message }

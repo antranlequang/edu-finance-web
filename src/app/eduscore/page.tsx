@@ -15,12 +15,23 @@ import { useEduscore, EduscoreData } from "@/lib/eduscore-service";
 import { useAuth } from "@/hooks/use-auth-neon";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { getEduscoreByUserId } from "@/lib/database";
+import { getEduscoreByUserId, getEduscoreHistoryByUserId } from "@/lib/database";
 import { getSampleEduscoreData, hasSampleEduscoreData } from "@/lib/sample-eduscore-data";
 import { FormattedText } from "@/components/ui/formatted-text";
+import { analyzeEduscoreCharts, AnalyzeEduscoreChartsOutput } from "@/ai/flows/analyze-eduscore-charts";
 
 // Helper functions for chart data
-function getScoreBreakdownData(eduscoreData: EduscoreData) {
+function getScoreBreakdownData(eduscoreData: EduscoreData, aiAnalysis?: AnalyzeEduscoreChartsOutput) {
+    if (aiAnalysis) {
+        return [
+            { name: 'Học tập', score: Math.round(aiAnalysis.scoreBreakdown.academic) },
+            { name: 'Kỹ năng', score: Math.round(aiAnalysis.scoreBreakdown.skills) },
+            { name: 'Hoạt động', score: Math.round(aiAnalysis.scoreBreakdown.activities) },
+            { name: 'Tài chính', score: Math.round(aiAnalysis.scoreBreakdown.financial) }
+        ];
+    }
+    
+    // Fallback to original logic if AI analysis not available
     const gpaScore = (eduscoreData.surveyData.academicInfoGPA / 4.0) * 40;
     const skillsScore = 23; // Based on sample data showing 23/25
     const activitiesScore = 18; // Based on sample data showing 18/20  
@@ -34,7 +45,18 @@ function getScoreBreakdownData(eduscoreData: EduscoreData) {
     ];
 }
 
-function getSkillsDistributionData(eduscoreData: EduscoreData) {
+function getSkillsDistributionData(eduscoreData: EduscoreData, aiAnalysis?: AnalyzeEduscoreChartsOutput) {
+    if (aiAnalysis) {
+        return [
+            { name: 'Kỹ năng kỹ thuật', value: aiAnalysis.skillsDistribution.technicalSkills },
+            { name: 'Ngôn ngữ lập trình', value: aiAnalysis.skillsDistribution.programmingLanguages },
+            { name: 'Chứng chỉ', value: aiAnalysis.skillsDistribution.certifications },
+            { name: 'Kinh nghiệm', value: aiAnalysis.skillsDistribution.workExperience },
+            { name: 'Ngoại ngữ', value: aiAnalysis.skillsDistribution.languageSkills }
+        ];
+    }
+    
+    // Fallback to original logic if AI analysis not available
     const skills = eduscoreData.surveyData.technicalSkills.split(',').map(s => s.trim());
     const programmingLangs = eduscoreData.surveyData.programmingLanguages?.split(',').map(s => s.trim()) || [];
     
@@ -57,6 +79,10 @@ export default function EduscorePage() {
     const eduscoreService = useEduscore();
     const [eduscoreData, setEduscoreData] = useState<EduscoreData | null>(null);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [history, setHistory] = useState<EduscoreData[]>([]);
+    const [selectedHistory, setSelectedHistory] = useState<EduscoreData | null>(null);
+    const [aiAnalysis, setAiAnalysis] = useState<AnalyzeEduscoreChartsOutput | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     // Redirect to login if not authenticated
     useEffect(() => {
@@ -118,6 +144,9 @@ export default function EduscorePage() {
                             completedAt: dbData.createdAt || new Date()
                         };
                         setEduscoreData(formattedData);
+                        // Load full history as well
+                        const historyList = await getEduscoreHistoryByUserId(user.email);
+                        setHistory(historyList as unknown as EduscoreData[]);
                     } else {
                         // Fallback to localStorage data
                         const localData = eduscoreService.getEduscoreData(user.email);
@@ -136,6 +165,48 @@ export default function EduscorePage() {
         
         loadEduscoreData();
     }, [user?.email, refreshTrigger]);
+
+    // AI Analysis effect - runs when eduscoreData changes
+    useEffect(() => {
+        const performAiAnalysis = async () => {
+            if (!eduscoreData || !user?.email) return;
+            
+            setIsAnalyzing(true);
+            try {
+                const analysisInput = {
+                    academicInfoGPA: eduscoreData.surveyData.academicInfoGPA,
+                    major: eduscoreData.surveyData.major,
+                    technicalSkills: eduscoreData.surveyData.technicalSkills || '',
+                    programmingLanguages: eduscoreData.surveyData.programmingLanguages || '',
+                    certifications: eduscoreData.surveyData.certifications || '',
+                    languageSkills: eduscoreData.surveyData.languageSkills || '',
+                    workExperience: eduscoreData.surveyData.workExperience || '',
+                    currentYear: eduscoreData.surveyData.currentYear,
+                    university: eduscoreData.surveyData.university,
+                    extracurricularActivities: eduscoreData.surveyData.extracurricularActivities || '',
+                    awards: eduscoreData.surveyData.awards || '',
+                    familyIncome: eduscoreData.surveyData.familyIncome,
+                    dependents: eduscoreData.surveyData.dependents,
+                    valuableAssets: eduscoreData.surveyData.valuableAssets || '',
+                    medicalExpenses: eduscoreData.surveyData.medicalExpenses || '',
+                    specialCircumstances: eduscoreData.surveyData.specialCircumstances || '',
+                    aspirations: eduscoreData.surveyData.aspirations || '',
+                    careerGoals: eduscoreData.surveyData.careerGoals || '',
+                    eduscore: eduscoreData.score,
+                };
+
+                const analysis = await analyzeEduscoreCharts(analysisInput);
+                setAiAnalysis(analysis);
+            } catch (error) {
+                console.error('AI Analysis failed:', error);
+                // Continue without AI analysis - fallback will be used
+            } finally {
+                setIsAnalyzing(false);
+            }
+        };
+
+        performAiAnalysis();
+    }, [eduscoreData, user?.email]);
 
     const scrollToContent = () => {
         const contentSection = document.getElementById('how-it-works');
@@ -306,6 +377,43 @@ export default function EduscorePage() {
                     </div>
                 </section>
 
+                <section className="bg-secondary py-16 md:py-24 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800">
+                    <div className="container mx-auto px-4 text-center ">
+                        <h2 className="text-3xl md:text-4xl font-bold text-white">Sẵn Sàng Khám Phá Tiềm Năng Của Bạn?</h2>
+                        <p className="mt-4 text-lg text-muted-foreground mb-8 text-white">
+                           Bắt đầu ngay hôm nay và xem những cơ hội nào đang chờ đợi bạn.
+                        </p>
+                        <Button 
+                            size="lg" 
+                            className="bg-accent hover:bg-accent/90"
+                            onClick={showSurveySection}
+                        >
+                            Bắt Đầu Khảo Sát Eduscore <ChevronDown className="ml-2 h-5 w-5" />
+                        </Button>
+                    </div>
+                </section>
+
+                {/* Survey Section - Only shown when button is clicked */}
+                {showSurvey && (
+                    <section id="survey-section" className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30">
+                        <div className="container mx-auto px-4">
+                            <div className="text-center mb-12">
+                                <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6">
+                                    Khảo Sát EduScore
+                                </h2>
+                                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                                    Hoàn thành khảo sát để nhận được điểm EduScore của bạn
+                                </p>
+                            </div>
+                            <div className="max-w-4xl mx-auto">
+                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 border border-white/20">
+                                    <SurveyWizard onComplete={handleSurveyComplete} />
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                )}
+                
                 {/* EduScore History Section - Only show if user has EduScore data */}
                 {eduscoreData && (
                     <section data-results-section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30">
@@ -375,6 +483,31 @@ export default function EduscorePage() {
                                     </div>
                                 </Card>
 
+                                {/* History List */}
+                                {history.length > 0 && (
+                                  <Card className="p-6 mb-8 bg-white/90 backdrop-blur-sm shadow-xl">
+                                    <div className="mb-4 flex items-center gap-2">
+                                      <History className="h-5 w-5 text-blue-600" />
+                                      <h4 className="text-lg font-bold text-gray-900">Lịch sử EduScore</h4>
+                                    </div>
+                                    <div className="space-y-3">
+                                      {history.map((h, idx) => (
+                                        <div key={h.id || idx} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                                          <div className="flex items-center gap-4">
+                                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">{h.score}/100</Badge>
+                                            <span className="text-sm text-gray-600">{formatDistanceToNow((h as any).createdAt || h.completedAt || new Date(), { addSuffix: true })}</span>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <Button size="sm" variant="outline" onClick={() => setSelectedHistory(h)}>
+                                              Xem chi tiết
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </Card>
+                                )}
+
                                 {/* Enhanced Visual Analytics */}
                                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                                     {/* Score Breakdown Chart */}
@@ -387,7 +520,7 @@ export default function EduscorePage() {
                                         </div>
                                         <div className="h-64">
                                             <ResponsiveContainer width="100%" height="100%">
-                                                <BarChart data={getScoreBreakdownData(eduscoreData)}>
+                                                <BarChart data={getScoreBreakdownData(eduscoreData, aiAnalysis || undefined)}>
                                                     <CartesianGrid strokeDasharray="3 3" />
                                                     <XAxis dataKey="name" fontSize={12} />
                                                     <YAxis fontSize={12} />
@@ -410,7 +543,7 @@ export default function EduscorePage() {
                                             <ResponsiveContainer width="100%" height="100%">
                                                 <RechartsPieChart>
                                                     <Pie
-                                                        data={getSkillsDistributionData(eduscoreData)}
+                                                        data={getSkillsDistributionData(eduscoreData, aiAnalysis || undefined)}
                                                         cx="50%"
                                                         cy="50%"
                                                         labelLine={false}
@@ -419,7 +552,7 @@ export default function EduscorePage() {
                                                         fill="#8884d8"
                                                         dataKey="value"
                                                     >
-                                                        {getSkillsDistributionData(eduscoreData).map((_, index) => (
+                                                        {getSkillsDistributionData(eduscoreData, aiAnalysis || undefined).map((_, index) => (
                                                             <Cell key={`cell-${index}`} fill={getSkillColors()[index % getSkillColors().length]} />
                                                         ))}
                                                     </Pie>
@@ -562,111 +695,30 @@ export default function EduscorePage() {
                                 </Card>
 
                                 {/* Progress Tracking */}
-                                <Card className="p-6 mb-8 bg-gradient-to-br from-purple-50 to-indigo-50 shadow-xl">
-                                    <div className="mb-6">
-                                        <h4 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                                            <TrendingUp className="h-6 w-6 text-purple-600" />
-                                            Tiến Độ Phát Triển
-                                        </h4>
+                                <Card className="p-8 mb-8 bg-white rounded-lg p-6 border border-purple-200">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="bg-purple-500 p-2 rounded-lg">
+                                            <Brain className="h-5 w-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h5 className="font-semibold text-gray-900">Tiềm Năng</h5>
+                                            <p className="text-sm text-gray-600">Đánh giá tổng thể</p>
+                                        </div>
                                     </div>
-                                    
-                                    <div className="grid md:grid-cols-3 gap-6">
-                                        {/* Academic Progress */}
-                                        <div className="bg-white rounded-lg p-6 border border-purple-200">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="bg-blue-500 p-2 rounded-lg">
-                                                    <BookOpen className="h-5 w-5 text-white" />
-                                                </div>
-                                                <div>
-                                                    <h5 className="font-semibold text-gray-900">Học Tập</h5>
-                                                    <p className="text-sm text-gray-600">Thành tích học thuật</p>
-                                                </div>
-                                            </div>
-                                            <div className="h-32">
-                                                <ResponsiveContainer width="100%" height="100%">
-                                                    <RadialBarChart innerRadius="70%" outerRadius="90%" data={[{name: 'GPA', value: (eduscoreData.surveyData.academicInfoGPA / 4.0) * 100, fill: '#3B82F6'}]} startAngle={90} endAngle={-270}>
-                                                        <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-                                                        <RadialBar background dataKey='value' cornerRadius={10} />
-                                                        <text x="50%" y="45%" textAnchor="middle" dominantBaseline="middle" className="text-base font-bold fill-foreground">
-                                                            {eduscoreData.surveyData.academicInfoGPA}
-                                                        </text>
-                                                        <text x="50%" y="60%" textAnchor="middle" dominantBaseline="middle" className="text-xs text-white fill-muted-foreground">
-                                                            / 4.0
-                                                        </text>
-                                                    </RadialBarChart>
-                                                </ResponsiveContainer>
-                                            </div>
+                                    <div className="text-center">
+                                        <div className="text-4xl font-bold text-purple-600 mb-2">
+                                            {eduscoreData.score >= 90 ? 'A+' : 
+                                                eduscoreData.score >= 85 ? 'A' : 
+                                                eduscoreData.score >= 80 ? 'B+' : 
+                                                eduscoreData.score >= 75 ? 'B' : 
+                                                eduscoreData.score >= 70 ? 'C+' : 'C'}
                                         </div>
-
-                                        {/* Skills Progress */}
-                                        <div className="bg-white rounded-lg p-6 border border-purple-200">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="bg-green-500 p-2 rounded-lg">
-                                                    <Zap className="h-5 w-5 text-white" />
-                                                </div>
-                                                <div>
-                                                    <h5 className="font-semibold text-gray-900">Kỹ Năng</h5>
-                                                    <p className="text-sm text-gray-600">Năng lực chuyên môn</p>
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div>
-                                                    <div className="flex justify-between text-sm mb-1">
-                                                        <span>Lập trình</span>
-                                                        <span className="font-medium">85%</span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div className="bg-green-500 h-2 rounded-full" style={{width: '85%'}}></div>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="flex justify-between text-sm mb-1">
-                                                        <span>Chứng chỉ</span>
-                                                        <span className="font-medium">70%</span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '70%'}}></div>
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <div className="flex justify-between text-sm mb-1">
-                                                        <span>Kinh nghiệm</span>
-                                                        <span className="font-medium">75%</span>
-                                                    </div>
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div className="bg-purple-500 h-2 rounded-full" style={{width: '75%'}}></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Overall Potential */}
-                                        <div className="bg-white rounded-lg p-6 border border-purple-200">
-                                            <div className="flex items-center gap-3 mb-4">
-                                                <div className="bg-purple-500 p-2 rounded-lg">
-                                                    <Brain className="h-5 w-5 text-white" />
-                                                </div>
-                                                <div>
-                                                    <h5 className="font-semibold text-gray-900">Tiềm Năng</h5>
-                                                    <p className="text-sm text-gray-600">Đánh giá tổng thể</p>
-                                                </div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="text-4xl font-bold text-purple-600 mb-2">
-                                                    {eduscoreData.score >= 90 ? 'A+' : 
-                                                     eduscoreData.score >= 85 ? 'A' : 
-                                                     eduscoreData.score >= 80 ? 'B+' : 
-                                                     eduscoreData.score >= 75 ? 'B' : 
-                                                     eduscoreData.score >= 70 ? 'C+' : 'C'}
-                                                </div>
-                                                <p className="text-sm text-gray-600 mb-3">Xếp hạng</p>
-                                                <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                                                    {eduscoreData.score >= 85 ? 'Xuất sắc' : 
-                                                     eduscoreData.score >= 75 ? 'Giỏi' : 
-                                                     eduscoreData.score >= 65 ? 'Khá' : 'Trung bình'}
-                                                </Badge>
-                                            </div>
-                                        </div>
+                                        <p className="text-sm text-gray-600 mb-3">Xếp hạng</p>
+                                        <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                                            {eduscoreData.score >= 85 ? 'Xuất sắc' : 
+                                                eduscoreData.score >= 75 ? 'Giỏi' : 
+                                                eduscoreData.score >= 65 ? 'Khá' : 'Trung bình'}
+                                        </Badge>
                                     </div>
                                 </Card>
 
@@ -676,12 +728,36 @@ export default function EduscorePage() {
                                         <div className="flex items-center gap-3 mb-3">
                                             <h4 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                                             <Bot className="h-6 w-6 text-white" />
-                                            Phân Tích Kết Quả Chi Tiết
+                                            Phân tích kết quả & Lời khuyên cá nhân
                                             </h4>
                                         </div>
-                                        <div className="text-white text-justify">
-                                            <FormattedText text={eduscoreData.reasoning} className="text-white" />
-                                        </div>
+                                        
+                                        {isAnalyzing ? (
+                                            <div className="flex items-center justify-center py-8">
+                                                <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full mr-3"></div>
+                                                <span className="text-white">Đang phân tích hồ sơ của bạn...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="text-white text-justify space-y-6">
+                                                {/* Original Reasoning */}
+                                                <div>
+                                                    <FormattedText text={eduscoreData.reasoning} className="text-white" />
+                                                </div>
+                                                
+                                                {/* AI Generated Personalized Advice */}
+                                                {aiAnalysis?.personalizedAdvice && (
+                                                    <div className="border-t border-white/20 pt-6 mt-6">
+                                                        <h5 className="font-semibold mb-4 text-xl flex items-center gap-2">
+                                                            <span className="text-2xl">✨</span>
+                                                            Lời khuyên cá nhân
+                                                        </h5>
+                                                        <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
+                                                            <FormattedText text={aiAnalysis.personalizedAdvice} className="text-white" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>   
                                 </Card>
 
@@ -710,41 +786,31 @@ export default function EduscorePage() {
                     </section>
                 )}
                 
-                <section className="bg-secondary py-16 md:py-24 bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800">
-                    <div className="container mx-auto px-4 text-center ">
-                        <h2 className="text-3xl md:text-4xl font-bold text-white">Sẵn Sàng Khám Phá Tiềm Năng Của Bạn?</h2>
-                        <p className="mt-4 text-lg text-muted-foreground mb-8 text-white">
-                           Bắt đầu ngay hôm nay và xem những cơ hội nào đang chờ đợi bạn.
-                        </p>
-                        <Button 
-                            size="lg" 
-                            className="bg-accent hover:bg-accent/90"
-                            onClick={showSurveySection}
-                        >
-                            Bắt Đầu Khảo Sát Eduscore <ChevronDown className="ml-2 h-5 w-5" />
-                        </Button>
-                    </div>
-                </section>
 
-                {/* Survey Section - Only shown when button is clicked */}
-                {showSurvey && (
-                    <section id="survey-section" className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/30">
-                        <div className="container mx-auto px-4">
-                            <div className="text-center mb-12">
-                                <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-800 mb-6">
-                                    Khảo Sát EduScore
-                                </h2>
-                                <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                                    Hoàn thành khảo sát để nhận được điểm EduScore của bạn
-                                </p>
-                            </div>
-                            <div className="max-w-4xl mx-auto">
-                                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 md:p-12 border border-white/20">
-                                    <SurveyWizard onComplete={handleSurveyComplete} />
-                                </div>
-                            </div>
+                {/* History Detail Modal */}
+                {selectedHistory && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-xl font-bold">Chi tiết báo cáo EduScore</h3>
+                        <Button variant="ghost" onClick={() => setSelectedHistory(null)}>Đóng</Button>
+                      </div>
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <div className="text-5xl font-bold mb-2">{selectedHistory.score}<span className="text-2xl text-gray-500">/100</span></div>
+                          <div className="text-sm text-gray-500 mb-4">{formatDistanceToNow((selectedHistory as any).createdAt || selectedHistory.completedAt || new Date(), { addSuffix: true })}</div>
+                          <div className="space-y-2 text-sm">
+                            <div><span className="font-medium">Ngành:</span> {selectedHistory.surveyData.major}</div>
+                            <div><span className="font-medium">Năm học:</span> {selectedHistory.surveyData.currentYear}</div>
+                            <div><span className="font-medium">GPA:</span> {selectedHistory.surveyData.academicInfoGPA}/4.0</div>
+                          </div>
                         </div>
-                    </section>
+                        <div className="text-sm text-justify">
+                          <FormattedText text={selectedHistory.reasoning} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
             </main>
             <Footer />

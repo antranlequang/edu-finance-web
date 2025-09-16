@@ -51,8 +51,7 @@ export const SAMPLE_EDUSCORE_DATA: SampleEduscoreData = {
 📊 **Tổng kết:**
 - **EduScore: 87/100**
 - Hồ sơ xuất sắc! Bạn có cơ hội cao với các học bổng.
-
-✨ **Lời khuyên:** Tiếp tục phát triển kỹ năng, tham gia hoạt động ngoại khóa và duy trì thành tích học tập tốt!`,
+`,
   surveyData: {
     academicInfoGPA: 3.5,
     major: "Công nghệ thông tin",

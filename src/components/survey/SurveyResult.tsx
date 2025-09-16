@@ -182,15 +182,15 @@ export default function SurveyResult({ result }: SurveyResultProps) {
         </Card>
       )}
 
-      {/* EduScore Display */}
+      {/* EduScore Display (match sample style) */}
       <Card>
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl md:text-3xl">Kết quả EduScore của bạn</CardTitle>
-          <CardDescription className="text-center">Điểm số này phản ánh hồ sơ tổng thể của bạn dựa trên thông tin được cung cấp.</CardDescription>
+          <CardTitle className="text-2xl md:text-3xl">EduScore của bạn</CardTitle>
+          <CardDescription className="text-center">Điểm số phản ánh hồ sơ tổng thể dựa trên thông tin bạn cung cấp.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="h-64 md:h-80">
+            <div className="h-48 md:h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart 
                   innerRadius="70%" 
@@ -215,7 +215,7 @@ export default function SurveyResult({ result }: SurveyResultProps) {
                     y="50%"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="text-5xl font-bold fill-foreground"
+                    className="text-4xl md:text-5xl font-bold fill-foreground"
                   >
                     {eduscore}
                   </text>
@@ -224,7 +224,7 @@ export default function SurveyResult({ result }: SurveyResultProps) {
                     y="65%"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="text-lg fill-muted-foreground"
+                    className="text-md md:text-lg fill-muted-foreground"
                   >
                     / 100
                   </text>
@@ -232,13 +232,21 @@ export default function SurveyResult({ result }: SurveyResultProps) {
               </ResponsiveContainer>
             </div>
             <div>
-              <h3 className="font-semibold text-xl mb-2 text-primary">Đánh giá dựa trên AI</h3>
+              <h3 className="font-semibold text-lg md:text-xl mb-2 text-primary">Tóm tắt Đánh giá AI</h3>
               <div className="text-muted-foreground italic text-justify">
                 "<FormattedText text={reasoning} />"
               </div>
             </div>
           </div>
         </CardContent>
+        <CardFooter>
+          <Link href="/scholarship">
+            <Button>
+              Xem học bổng phù hợp với bạn
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        </CardFooter>
       </Card>
 
       {/* Skills Chart */}
